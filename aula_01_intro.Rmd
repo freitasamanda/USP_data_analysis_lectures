@@ -1,0 +1,72 @@
+---
+title: "aula_01_intro"
+author: "amanda_freitas"
+date: '2022-04-07'
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r}
+#install.packages("nycflights13")
+#install.packages("tidyverse")
+library("tidyverse")
+library("nycflights13")
+
+head(flights)
+nrow(flights)
+ncol(flights)
+
+```
+Linhas são observações
+Colunas são variáveis
+
+# Inserir código em linha
+```{r}
+raio <- 20
+area <- pi * raio^2
+```
+
+A área de um círculo de raio 2 é `r area`.
+
+Você pode inserir gráficos direto no relatório
+```{r}
+summary(cars)
+plot(pressure)
+```
+
+
+# Criando tibbles:
+```{r}
+#criar dois vetores
+siglas_aeroportos <- c("NWR", "JFK", "LGA")
+
+nomes_aeroportos <- c("Newark", "John F Kennedy", "Laguardia")
+
+#criar o tibble com estes vetores, dando nomes às colunas
+tabela_aeroportos <- tibble(Sigla = siglas_aeroportos,
+                            Nome = nomes_aeroportos)
+#checar o tibble e suas dimensões
+tabela_aeroportos
+nrow(tabela_aeroportos)
+ncol(tabela_aeroportos)
+```
+
+# Exercícios
+
+```{r}
+#install.packages("dslabs")
+library("dslabs")
+
+nrow(gapminder) * ncol(gapminder)
+
+head(gapminder)
+
+```
+Gapminder é um banco de dados com estatísticas de países desde 1960.
+
+O número de observações em gapminder é `r nrow(gapminder)`. O número de variáveis em gapminder é `r ncol(gapminder)`. Cada observação em gapminder representa um país. As variáveis em gapminder são `r colnames(gapminder)`.
+
+
+
