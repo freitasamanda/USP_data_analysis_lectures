@@ -1,0 +1,353 @@
+---
+title: "Aula 2"
+author: "29 de abril de 2022"
+output: html_document
+---
+# Deixando os relatórios limpos
+Os seguintes parâmetros adicionados num chunk como esse no começo de um relatório deixam o relatório limpo
+```{r, echo = FALSE}
+knitr::opts_chunk$set(echo=FALSE, error=FALSE, warning=FALSE, message=FALSE)
+```
+
+# Carregando pacotes
+```{r}
+library("tidyverse")
+library("tidylog")
+
+library("nycflights13")
+```
+
+
+
+# Renomear variáveirs (rename)
+
+```{r}
+
+names(flights)
+
+flights2 <- flights %>% rename(arrival_time = arr_time)
+
+names(flights2)
+
+```
+
+Com o pipe, podemos encadear mais de uma função no mesmo banco. Rename
+pode ser usada para renomear várias variáveis ao mesmo tempo
+
+```{r}
+flights2 <- flights2 %>% 
+  rename(departure_time = dep_time,
+         departure_delay = dep_delay)
+
+```
+
+# Selecionar variáveis (Select)
+
+ou seja, selecionar colunas do nosso banco. Lembrand que elas vão sair
+no seu banco na ordem que você escvreê-las dentro do select
+
+```{r}
+flights_datas <- flights2 %>% 
+  select(year, month, day)
+
+names(flights_datas)
+```
+
+# Transformar variáveis (mutate)
+
+Cria novas colunas no nosso banco com base em operações que aplicamos em
+variáveis já existentes
+
+```{r}
+flights2 <- flights %>% 
+  mutate(dep_delay_dobro = dep_delay*2)
+```
+
+Para transformar uma coluna sem criar uma nova é só renomear a própria
+variável com o nome que já existe
+
+```{r}
+flights_dep_delay_segundos <- flights2 %>% 
+  mutate(dep_delay = dep_delay*60)
+```
+
+Mutate pode ser combinado com outras funções, exemplo a função tolower
+muda para letras minúsculas
+
+```{r}
+flights_voos_minusculas <- flights %>% 
+  mutate(origin = tolower(origin))
+flights_voos_minusculas
+
+```
+
+# Cortar/selecionar Observações (Slice)
+
+Ou seja, selecionar linhas do nosso banco de acordo com a posição delas
+no banco, isto é, a linha em que eles estão no banco
+
+Podemos selecionar uma linha específica, uma sequência de linhas e etc.
+Selecionando uma linha e selecionando uma sequencia de linhas:
+
+```{r}
+flights_linhas_selecionadas <- flights %>% 
+  slice(5)
+
+flights_linhas_selecionadas2 <- flights %>% 
+  slice(1:5)
+
+flights_linhas_selecionadas
+flights_linhas_selecionadas2
+
+```
+
+Você pode selecionar de acordo com um vetor ou você pode usar o slice
+com um valor negativo para excluir observações.
+
+```{r}
+flights_linhas_selecionadas <- flights %>% 
+  slice(-2) #remove a linha 2
+
+linhas_desejadas <- c(10,12,20,60,15)
+
+flights_linhas_selecionadas <- flights %>% 
+  slice(linhas_desejadas)
+  
+```
+
+# Filtrar Observações (Filter)
+
+Seleciona observações com base em condições. Para cada condição o R vai
+avaliando se é TRUE ou FALSE e mantém só o que for TRUE.
+
+A estrutura é sempre: *Nome da Variável* *tipo de comparação* usando ==
+*critério* como deve estar o dado na variável
+
+Exemplo, apenas voos de junho:
+
+```{r}
+flights_junho <- flights %>% 
+  filter(month == 6)
+
+flights_junho
+```
+
+Não esqueça os operadores condicionais!! "==" igual "!=" diferente "\<"
+maior "\>" menor "\<=" maior ou igual "\>=" menor ou igual
+
+Use o símbolo "&" para combinar critérios:
+
+```{r}
+flights_junho_dia_5 <- flights %>% 
+  filter(month == 6 & day == 5)
+
+```
+
+Não esqueça os operadores lógicos!! "&" e "!" não "\|" ou
+
+# Combinando manipulações
+
+No pipe você pode combinar mais de uma manipulação. Ele sempre vai
+carregar o banco anterior para a ação seguinte, então preste atenção
+nisso
+
+```{r}
+flights_muitas_manips <- flights %>% 
+  rename(arrival_time = arr_time) %>% 
+  mutate(dep_delay = dep_delay*60) %>% 
+  filter(month == 6 & day == 5) %>% 
+  select(month, day, year, arrival_time, dep_delay)
+
+flights_muitas_manips
+```
+
+# Exercício 1
+
+Os voos de United (carrier UA) que decolaram no dia 25 de janeiro.
+
+```{r}
+flights %>% 
+  filter(carrier == "UA" & day == 25 & month == 1)
+```
+
+Os voos de JetBlue (carrier B6) que decolaram com mais de 300 minutos de
+atraso de Newark (origin EWR).
+
+```{r}
+flights %>% 
+  filter(carrier == "B6" & origin == "EWR" & dep_delay >= 300)
+  
+```
+
+Calcule a velocidade dos voos que decolaram de LaGuardia (origin LGA) no
+dia 7 de setembro antes das 6h. Lembre-se que velocidade é a distância
+dividida por tempo. (Qual é a unidade desta velocidade?)
+
+```{r}
+flights %>% 
+  filter(origin == "LGA" & day == 7 & month == 9 & dep_time <= 600) %>% 
+  mutate(velocidade = distance / air_time)
+
+```
+
+Se air_time está em minutos, distancia está em algo que não sei
+
+Uma tabela com apenas o atraso na chegada de todos os voos atrasados por
+pelo menos 60 minutos que partiram do aeroporto Newark e chegaram em
+Buffalo (BUF) no dia seis de todos os meses.
+
+```{r}
+flights %>% 
+  filter(origin == "EWR" & dest == "BUF" & day == 6 & dep_delay >= 60) %>% 
+  select(dep_delay)
+  
+```
+
+Uma tabela dos números dos aviões (tailnum), destino, distância e a
+velocidade em milhas por hora para voos que voaram em maio pelo menos
+1000 milhas ou com velocidade acima de 500 milhas por hora.
+
+# Abrindo dados
+A função mais usada é read_csv
+
+```{r}
+
+file1 <- "https://raw.githubusercontent.com/leobarone/ifch_intro_r/master/data/bf_amostra_hv.csv"
+
+dados <- read_csv(file1)
+dados
+
+```
+
+read_delim permite especificar o separador:
+
+```{r}
+
+file_semi_colon <- "https://raw.githubusercontent.com/leobarone/ifch_intro_r/master/data/bf_amostra_hp.csv"
+
+dados <- read_delim(file_semi_colon, 
+                    delim = ";")
+```
+
+col_names = F é usado para que a primeira linha não seja lida por padrão como nome das variáveis. Você também pode por em col_names um vetor com novos nomes para as variáveis:
+
+```{r}
+file_sem_header <- "https://raw.githubusercontent.com/leobarone/ifch_intro_r/master/data/bf_amostra_nv.csv"
+
+dados <- read_delim(file_sem_header, 
+                    col_names = c("estado", "municipio_cod", "municipio_nome",
+                                  "NIS", "transferido"),
+                    delim = ",")
+```
+
+
+O argumento col_types deve ser uma sequência de caracteres onde “c” = “character”, “d” = “double” (numérico), “l” = “logical” e “i” = “integer” (números inteiros). 
+
+Use 
+
+locale = locale(decimal_mark=",",grouping_mark=".")
+
+Para especificar que os decimais são vírgulas, como é usado no Brasil
+
+Use
+
+ locale = locale(encoding='latin1')
+ 
+ Para especificar o encoding do arquivo e lidar com arquivos com caracteres especiais
+ 
+## Para arquivos em excel:
+```{r}
+library("readxl")
+
+#vê quantas planilhas excel existem neste arquivo
+excel_sheets("bases/Base 2005.xls")
+
+externas <- read_excel("bases/Base 2005.xls", "Variáveis externas")
+
+externas
+```
+
+## Para arquivos SPSS, Stata e SAS
+```{r}
+library(haven)
+
+# SPSS
+latino_barometro_spss <- read_spss("Latinobarometro_2015_Eng.sav")
+
+# Stata
+latino_barometro_stata <- read_stata("Latinobarometro_2015_Eng.dta")
+
+```
+
+# Exercício 3 Abrindo dados eleitorais
+```{r}
+
+dados_votacao_AC_2016 <- read_delim("bases/votacao_secao_2016_AC.csv",
+                                 delim = ";",
+                                 locale = locale(decimal_mark=",",grouping_mark=".", encoding="latin1"))
+
+dados_votacao_AC_2016
+```
+
+Dúvidas - as datas não estão sendo lidas como data, como eu posso resolver isso??
+Eu poderia criar dia mes e ano. No entanto DT_GERACAO só tem um valor, então posso descartar essa coluna. Não adianta perder tempo arrumando colunas que serão inúteis
+
+```{r}
+#variáveis inúteis - todas as linhas tem o mesmo valor
+unique(dados_votacao_AC_2016$DT_GERACAO)
+unique(dados_votacao_AC_2016$HH_GERACAO)
+unique(dados_votacao_AC_2016$ANO_ELEICAO)
+unique(dados_votacao_AC_2016$CD_TIPO_ELEICAO)
+unique(dados_votacao_AC_2016$NM_TIPO_ELEICAO)
+unique(dados_votacao_AC_2016$NR_TURNO)
+unique(dados_votacao_AC_2016$CD_ELEICAO)
+unique(dados_votacao_AC_2016$DS_ELEICAO)
+unique(dados_votacao_AC_2016$DT_ELEICAO)
+unique(dados_votacao_AC_2016$TP_ABRANGENCIA)
+unique(dados_votacao_AC_2016$SG_UF)
+
+
+#variáveis úteis
+unique(dados_votacao_AC_2016$SG_UE)
+unique(dados_votacao_AC_2016$NM_UE)
+unique(dados_votacao_AC_2016$CD_MUNICIPIO)
+unique(dados_votacao_AC_2016$NM_MUNICIPIO)
+unique(dados_votacao_AC_2016$NR_ZONA)
+unique(dados_votacao_AC_2016$NR_SECAO)
+unique(dados_votacao_AC_2016$CD_CARGO)
+unique(dados_votacao_AC_2016$DS_CARGO)
+unique(dados_votacao_AC_2016$NR_VOTAVEL)
+unique(dados_votacao_AC_2016$NM_VOTAVEL)
+unique(dados_votacao_AC_2016$QT_VOTOS)
+unique(dados_votacao_AC_2016$NR_LOCAL_VOTACAO)
+
+
+dados_votacao_AC_2016_uteis <- dados_votacao_AC_2016 %>% 
+  select(SG_UE, NM_UE, CD_MUNICIPIO, NM_MUNICIPIO, NR_ZONA, NR_SECAO, CD_CARGO, DS_CARGO, NR_VOTAVEL, NM_VOTAVEL, QT_VOTOS, NR_LOCAL_VOTACAO)
+
+dados_votacao_AC_2016_uteis
+```
+
+Selecionando algumas colunas e linhas úteis
+
+```{r}
+summary(dados_votacao_AC_2016_uteis$QT_VOTOS)
+
+#só prefeitos
+dados_votacao_prefeitos <- dados_votacao_AC_2016_uteis %>% 
+  filter(DS_CARGO == "Prefeito")
+
+#só vereadores
+dados_votacao_vereadores <- dados_votacao_AC_2016_uteis %>% 
+  filter(DS_CARGO == "Vereador")
+
+#só vereadores com mais de 100 votos
+dados_votacao_vereadores_100 <- dados_votacao_vereadores %>% 
+  filter(QT_VOTOS > 100)
+
+dados_votacao_vereadores_100
+
+
+```
+
+
