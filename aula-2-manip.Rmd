@@ -326,6 +326,10 @@ dados_votacao_AC_2016_uteis <- dados_votacao_AC_2016 %>%
   select(SG_UE, NM_UE, CD_MUNICIPIO, NM_MUNICIPIO, NR_ZONA, NR_SECAO, CD_CARGO, DS_CARGO, NR_VOTAVEL, NM_VOTAVEL, QT_VOTOS, NR_LOCAL_VOTACAO)
 
 dados_votacao_AC_2016_uteis
+
+write.csv(dados_votacao_AC_2016_uteis, "bases\\dados_votacao_AC_2016_uteis.csv")
+
+
 ```
 
 Selecionando algumas colunas e linhas úteis

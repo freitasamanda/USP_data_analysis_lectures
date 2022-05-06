@@ -1,0 +1,132 @@
+```{r}
+library("tidyverse")
+library("tidylog")
+library("readr")
+library("nycflights13")
+
+
+dados_AC <-  read_delim("bases/dados_votacao_AC_2016_uteis.csv",
+                                 delim = ",",
+                                 locale = locale(decimal_mark=",",grouping_mark=".", encoding="latin1"))
+
+
+dados_AC
+
+```
+
+# Dividir variáveis (separate)
+
+como usar: nome da coluna que se quer dividir, colunas novas, posição do caracter onde separar.
+
+Se quiser manter a variável original você tem que colocar o argumento "remove=FALSE"
+
+```{r}
+exemplo_separate <- tibble( ID = 1:3,
+                            Mes_Ano = c("jan2013", "mar2020", "out2013"))
+
+
+exemplo3 <- exemplo_separate %>% separate(Mes_Ano, c("Mes", "Ano"), 3)
+
+```
+
+Você também pode separar em algum caractere específico:
+
+```{r}
+exemplo_separate_2 <- tibble(ID = 1:3,
+                             Mes_Ano = c("janeiro_2013", "marco_2009", "outubro_2010"))
+
+exemplo_separate_2 %>% separate(Mes_Ano, c("Mes", "Ano"), "_")
+
+
+```
+
+# Unificar variáveis (unite)
+
+Argumentos parecidos com separate, mas sem o elemento separador, nome da nova coluna, e no c(quais colunas quer unir). Por padrão o sep = "_", use sep="caracter que você quer que seja separador"
+
+```{r}
+exemplo3 <- exemplo3 %>% unite("Mes_Ano", c(Mes, Ano))
+
+exemplo3
+```
+
+# Recodificar variáveis
+
+```{r}
+exemplo_Recodificando <- tibble(ID= 1:3,
+                                Mes = c("janeiro", "february", "outubro"),
+                                Ano = c(2013,2009, 2015))
+
+exemplo_Recodificando
+```
+
+Podemos mudar o nome apenas do valor february usando mutate junto com case_when(), colocamos condição de qual valor tem que estar na coluna que queremos mudar e usamos ~para o novo valor
+
+O problema é que apaga tudo. Para não apagar, insira uma condição escrito TRUE~nome da coluna
+
+```{r}
+exemplo_Recodificando %>% mutate(Mes=case_when(Mes=="february"~"fevereiro"))
+# para nao apagar tudo:
+
+exemplo_Recodificando %>% mutate(Mes = case_when(Mes == "february"~"fevereiro", TRUE~Mes))
+
+```
+
+Vamos criar uma nova coluna que mostre os casos antes e depois de 2010. Para isso, as condições devem cobrir todos os valores possíveis para Ano - devem ser completas e mutualmente excludentes
+
+```{r}
+exemplo_Recodificando %>% mutate(Depois_2010 = case_when(Ano > 2010~1,
+                                                         Ano<=2010~0))
+```
+
+# Exercício 1
+```{r}
+flights
+
+flights_Exercicio <- unite("day_month_year", c(day, month, year))
+flights_Exercicio <- mutate(day_month_year = day, "_", month, "_", "year")
+
+```
+
+# Ordenar (arrange)
+Organiza a nossa tabela, por exemplo em ordem crescnete ou decrescente de acordo com alguma coluna. No exemplo abaixo, os dados são ordenados primeiros em ordem crescente por ano e depois dentro de cada Ano por valor.
+
+Se quisermos ordem descente, só usar "-"
+
+```{r}
+
+
+ex_arrange <- tibble(ID=1:10,
+                     Ano=c(2008, 2005, 2009, 2006, 2006, 2007, 2008, 2005, 2008, 2005),
+                     Mes=c("Abril","Novembro","Julho","Março","Novembro","Fevereiro",
+                           "Junho","Novembro","Janeiro","Outubro"),
+                     Valor=c(750,800,300,500,850,450,600,450,700,350))
+
+ex_arrange %>% arrange(Ano, Valor)
+
+#ordem decrescente:
+ex_arrange %>% arrange(-Valor)
+
+
+```
+
+# Filtrar para os maiores ou menores
+Usamos top_n para os maiores, colocando o número de obsrvações (por exemplo as 5 maiores) e a coluna. Para os menos, colocar "-" na frente do número de observações. Já o top_frac devolve uma fração, por exemplo os 30% maiores, usando em decimal
+
+```{r}
+ex_arrange %>% top_n(5, Valor)
+
+ex_arrange %>% top_n(-5, Valor)
+
+ex_arrange %>% top_frac(0.3, Valor)
+```
+# Dados de Time-Series: lag e lead
+lag()
+
+
+```{r}
+ex_arrange %>% arrange(Ano) %>% 
+
+
+```
+
