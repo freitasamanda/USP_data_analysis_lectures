@@ -1,0 +1,138 @@
+---
+title: "aula_04_descstats"
+author: "amanda_freitas"
+date: '2022-05-13'
+output: word_document
+---
+
+```{r}
+library("tidyverse")
+library("readr")
+library("nycflights13")
+library("tidylog")
+
+```
+
+# Summarize - estatísticas resumidas
+summarize gera um novo tibble pequeno que contém as estatísticas resumidas. Pode usar com o pipe. A estrutura é o nome da nova variável no novo tibble, a função que vai agregar/resumir a variável, e a variável que vai ser resumido. Use na.rm = TRUE para remover os NAs, porque o R por apdrão só vai te avisar para que você investigue aquele NA
+
+## Funções para calcular estatísticas
+média = mean()
+mediana = median()
+desvio padrão = sd()
+quantil 10% = quantile(variavel, probs = 0.1)
+maximo = max()
+minimo = min()
+
+
+Exemplo calculando a distância média de todos os voos:
+
+
+```{r}
+flights %>% summarize(media_distancia = mean(distance))
+
+#calculando mais de uma estatística
+
+flights %>% summarize(
+  media_distancia = mean(distance),
+  mediana_distancia = median(distance),
+  sd_distance = sd(distance, na.rm=TRUE)
+)
+
+
+```
+
+Só que aí criou uma única linha com a média distancia para todos os valores.
+Você pode usar as colunas dessa table apara se referir às variáveis: 
+A distância média de todos os vooes é `r media_distance`
+
+# Criando suas próprias funções 
+
+A estrutura geral de toda função é:
+```{r}
+
+nome_funcao <- function(insumo1, insumo2){
+
+  resultado <- ...
+  
+  return(resultado)
+    
+}
+
+
+# eemplo criar uma função que calcule a razão entre o percentil 90 e o 10
+
+
+
+percentile_90_10 <- function(variavel) {
+  
+  calculo <- quantile(variavel, probs=0.9,na.rm=TRUE)/
+    quantile(variavel, probs=0.1,na.rm=TRUE)
+    
+    return(calculo)
+}
+
+#Agora podemos aplicar nossa nova função no flights
+
+
+flights %>% summarize(percentile_90_10_distance=percentile_90_10(distance),
+                      percentile_90_10_air_time=percentile_90_10(air_time))
+
+
+
+
+```
+
+# Group_by - agrupando
+É usado mais frequentemente, porque queremos aquelas estatísticas não para todos, mas agrupadas por país, por companhia, por ano. Usamos outra variável da nossa tabela para criar os grupos
+
+```{r}
+flights_por_aeroporto <- flights %>% 
+  group_by(origin)
+
+flights_por_aeroporto
+```
+
+Na prática ainda não mudou nada, mas no R console fica aparecendo que a base está agrupada e quantos grupos tem. Sozinho, group_by não é muito útil. Vamos calcular a distância média por aeroporto. Agora teremos uma linha para cada aeroporto (note que a linha é a variável que usamos no group_by)
+
+```{r}
+flights %>% group_by(origin) %>% 
+  summarize(mean_distance = mean(distance))
+```
+Podemos agrupar para mais de uma coisa ao mesmo tempo. Por exemplo se quisermos agrupados por aeroporto (são 3 aeroportos) E por mês (são 12 meses), agora vai ter 36 linhas, cada linha vai ser a distância média de cada aeroporto pra cada mês
+
+```{r}
+flights %>% group_by(origin, month) %>% 
+  summarize(mean_distance = mean(distance))
+```
+
+O resultado de summarize é um tibble então podemos usar as outras funções do tidyverse nele. Por exemplo, vamos remover LGA e converter a distância para km:
+
+```{r}
+flights %>% group_by(origin, month) %>% 
+  summarize(mean_distance = mean(distance)) %>% 
+  filter(origin != "LGA") %>% 
+  mutate(mean_distance_km = mean_distance*1.60934)
+
+
+#selecionando o voo mais atrasado por aeroporto de origem:
+
+flights %>% group_by(origin) %>%
+  top_n(1, dep_delay)
+
+```
+
+
+# Eercício 1 - análises por grupo
+
+1. Calcule a duração (air_time) média por companhia aérea (carrier).
+
+2. Calcule a duração (air_time) média por companhia aérea (carrier) e mês (month).
+
+3. Calcule o atraso médio (dep_delay) por aeroporto de origem (origin). Qual aeroporto tem o pior atraso?
+
+4. Qual companhia aérea (carrier) tem o pior registro de atrasos (dep_delay) na média no aeroporto JFK?
+
+5. Você odeia atrasos. Qual é o pior mês para viajar do aeroporto JFK?
+
+
