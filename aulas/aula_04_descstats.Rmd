@@ -127,12 +127,148 @@ flights %>% group_by(origin) %>%
 
 1. Calcule a duração (air_time) média por companhia aérea (carrier).
 
+```{r}
+flights %>% group_by(origin) %>% 
+  summarise(duracao_media = mean(air_time, na.rm = TRUE))
+```
+
 2. Calcule a duração (air_time) média por companhia aérea (carrier) e mês (month).
+
+```{r}
+flights %>% group_by(carrier, month) %>% 
+  summarise(duracao_media = mean(air_time, na.rm=T))
+```
+
 
 3. Calcule o atraso médio (dep_delay) por aeroporto de origem (origin). Qual aeroporto tem o pior atraso?
 
+```{r}
+flights %>% group_by(origin) %>% 
+  summarise(atraso_medio = mean(dep_delay, na.rm=T)) %>% 
+  arrange(-atraso_medio)
+```
+
+
 4. Qual companhia aérea (carrier) tem o pior registro de atrasos (dep_delay) na média no aeroporto JFK?
 
+```{r}
+flights %>% filter(origin == "JFK") %>% 
+  group_by(carrier) %>% 
+  summarise(atrasos_medios = mean(dep_delay, na.rm=T)) %>% 
+  arrange(-atrasos_medios)
+
+
+flights %>%  group_by(carrier)  %>% 
+  filter(origin == "JFK") %>% 
+  summarise(atrasos_medios = mean(dep_delay, na.rm=T)) %>% 
+  arrange(-atrasos_medios)
+
+
+```
+
+
+
 5. Você odeia atrasos. Qual é o pior mês para viajar do aeroporto JFK?
+```{r}
+flights %>% filter(origin == "JFK") %>% 
+  group_by(month) %>% 
+  summarise(atrasos_medios = mean(dep_delay, na.rm=T)) %>% 
+  arrange(-atrasos_medios)
+```
+
+# Número de obversações com tally
+tally() calcula o número de observações e pode ser usado com group_by(). Tally não precisa de argumentos
+
+Por exemplo, queremos comparar o número de voos de cada aeroporto:
+```{r}
+flights %>% group_by(origin) %>% 
+  tally()
 
 
+#calcular o número de voos de cada aeroporto para cada destino:
+flights %>% group_by(origin, dest) %>% 
+  tally()
+
+```
+# Exercício 2 - tally(), número de observações por grupo
+
+1. Quantos voos decolaram de Nova Iorque em cada mês de 2013?
+```{r}
+flights %>% filter(year == 2013) %>% 
+  group_by(month) %>% 
+  tally()
+```
+
+
+2. Qual companhia aérea teve o maior número de voos em cada mês de 2013?
+
+```{r}
+flights %>% filter(year == 2013) %>% 
+  group_by(carrier, month) %>% 
+  tally() %>% 
+  arrange(month)
+```
+
+3. Qual é a média do número de voos que decolaram dos três aeroportos, em cada mês?
+
+```{r}
+flights %>% group_by(origin, month) %>% 
+  tally() %>% 
+  group_by(origin, month) %>% 
+  summarise(media_n = mean(n))
+```
+
+
+4. Qual é a média mensal do número de voos que decolaram em cada aeroporto?
+```{r}
+flights %>% group_by(origin, month) %>% 
+  tally() %>% 
+  group_by(origin, month) %>% 
+  summarise(media_n = mean(n))
+
+```
+
+5. Qual horário de partida (dep_time) é o segundo mais congestionado (medida pelo número de decolagens) em cada aeroporto? (O mais congestionado é o horário NA, então é mais interessante pegar o segundo mais congestionado).
+
+
+```{r}
+flights %>% group_by(origin, dep_time) %>% 
+  tally() %>% 
+  arrange(-n)
+
+```
+
+# Mutate por grupo
+É comum agrupar para alguma unidade de análise interessante e aplicar um mutate, mantendo o tamanho do banco de dados original. Por exemplo, agrupar por orgiem e adicionar a média da distância (a diferença entre fazer isso e summarize é que summarize sempre reduz o número de linhas do banco)
+
+```{r}
+flights %>% group_by(origin) %>% 
+  mutate(media_distance = mean(distance, na.rm=T))
+```
+# Saindo de agrupamentos
+lembre-se que o group_by é mantido em todos os pipes e também dentro de objetos salvos. 
+
+```{r}
+
+
+flights_media <- flights %>% group_by(origin) %>%
+  mutate(media_distance=mean(distance,na.rm=TRUE))
+
+groups(flights_media)
+
+
+```
+
+Se depois quiser calcular uma única média de atrasos, ele vai retornar a média ainda agrupada
+```{r}
+flights_media %>% summarize(media_atraso = mean(dep_delay, na.rm=T))
+
+#desagrupando
+
+flights_media %>% ungroup() %>% summarize(media_atraso = mean(dep_delay, na.rm=T))
+```
+# PORCENTAGENS
+
+# Across
+
+# Exercício 3

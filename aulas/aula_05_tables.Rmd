@@ -1,0 +1,191 @@
+---
+title: "aula5_tables"
+author: "amanda_freitas"
+date: '2022-05-20'
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(nycflights13)
+library(knitr)
+library(tidylog)
+library(DT)
+```
+
+# Construir tabelas estáticas
+função kable(), para a qual podem ser passados argumentos, como caption
+sample_n() permite escolher um número aleatório de observações. Para gerar uma aleatoriedade reproduzível, use set.seed() antes de rodar sample, porque se não a cada vez que você rodar sample vai gerar uma amostra aleatória nova. 
+
+O argumento digits(1) em kable() limita o número de casas decimais para 1. Use o argumento col.names() em kable() para dar nomes mais intuitivos e completos para suas colunas. Para formatar os números em português (usamos . para dezenas e , para decimais) use  format.args=list(big.mark=".", decimal.mark=",")
+
+```{r}
+flights
+
+set.seed(06080)
+flights %>% select(year, month, day, origin, dest, distance) %>% 
+  sample_n(5) %>% 
+  kable(caption = "Tabela 1: origens, destinos e distâncias", 
+        digits = 1, 
+        col.names = c("Ano", "Mês", "Dia", "Origem", "Destino", "Distância"),  
+        format.args=list(big.mark=".", decimal.mark=","))
+```
+
+# Tabelas interativas
+função data.table() do pacote DT. Só funcionarão em HTML, nos relatórios em PDF e Word não vão funcionar
+
+```{r}
+
+flights %>% 
+  sample_n(100) %>%
+  mutate(velocidade=distance/air_time) %>%
+  select(month, day, dep_time, carrier, flight, origin, dest, velocidade) %>%
+  datatable()
+```
+
+# EXERCÍCIO 1 - TABELAS BONITAS
+1. Gere uma tabela estática de duração (air_time) média dos voos de cada aeoporto de origem, ordenado de menor a maior duração. Inclua um título e a formatação apropriada na sua tabela.
+```{r}
+flights %>% group_by(origin) %>% 
+  summarize(media_air_time = mean(air_time, na.rm=T)) %>% 
+  arrange(-media_air_time) %>% 
+   kable(caption = "Duração média dos voos de cada aeroporto de origem", col.names = c("Aeroporto de Origem", "Duração Média dos Voos"), digits = 2)
+ 
+```
+
+Identifique os voos de origem ‘EWR’ no dia 1 de Abril com decolagem antes de 6h. Prepare uma tabela estática que mostra as variáveis dep_time, dep_delay, carrier, flight, dest, air_time, distance. Inclua um título e a formatação apropriada.
+
+```{r}
+flights %>% filter(origin == "EWR" & day == 1 & month == 4 & dep_time <= 600) %>%
+  select(flight, carrier, dest, air_time, distance, dep_time, dep_delay) %>% 
+  kable(caption = "Voos de EWR 1 de abril antes das 6h", col.names = c("Voo", "Carrier", "Destino", "Duração", "Distância", "Horário decolagem", "Atraso decolagem"))
+```
+
+Duplique a tabela de questão 2, mas agora mande o resultado para uma tabela interativa de datatable. (Não se preocupe com a formatação).
+
+```{r}
+flights %>% filter(origin == "EWR" & day == 1 & month == 4 & dep_time <= 600) %>%
+  select(flight, carrier, dest, air_time, distance, dep_time, dep_delay) %>% 
+  datatable()
+```
+
+# Mudando a unidade de observação
+pivot_wide() converte LINHAS em COLUNAS, de formato longo para largo, ele aumenta o NÚMERO DE COLUNAS
+pivot_longer() converte COLUNAS em LINHAS, de um formato largo para um formato longo, ele AUMENTA O NÚMERO DE LINHAS
+
+Usando um exemplo com month, day, origin e dest:
+```{r}
+flights %>% filter(dest=="SNA") %>% 
+  select(month, day, origin, dest)
+
+```
+A unidade de observação aqui é cada voo. Podemos usar pivot_longer para transformar a unidade de observação dessa tabela de cada voo em pousos e decolagens. Assim cada linha vai ser um origin e um dest, origin e dest vão virar as linhas da tabela:
+
+```{r}
+flights %>% filter(dest=="SNA") %>% 
+  select(month, day, origin, dest) %>% 
+  pivot_longer(cols=c(origin, dest), names_to = "Direção", values_to = "Aeroporto")
+
+```
+Agora a unidade de observação é um voo e um pouso
+Chamamos esse formato de longo porque AUMENTA O NÚMERO DE LINHAS.
+É importante antes de usar pivot criar um identificador único para cada voo, porque aí teremos como rastrear.
+
+Como criar um identificador único? Usando distinct até o resultado de distinct dar o mesmo número de linhas do banco original.
+
+No caso cada voo pode ser identificado pelo dia, mes, horario de saída, empresa, número do voo, origem e destino
+
+```{r}
+flights %>% distinct(month, day, dep_time, carrier, flight, origin, dest)
+#no console apareceu no rows removed. Se voce tirar qualquer uma delas, já vai remover rows
+
+#refazendo o pivot_longer incluindo essas variáveis:
+
+flights %>% filter(dest=="SNA") %>% 
+  select(month, day, dep_time, carrier, flight, origin, dest)
+
+flights_longo <- flights %>% filter(dest=="SNA") %>% 
+  select(month, day, dep_time, carrier, flight, origin, dest) %>% 
+  pivot_longer(cols=c(origin, dest), 
+               names_to="Direção", 
+               values_to="Aeroporto")
+
+flights_longo
+
+```
+Agora o voo UA que saiu 646 de número 1496 tem duas linhas - uma para o aerporto de origem, e outra para o de destino.
+
+
+Indo de longo para largo, nós iremos transformar OBSERVAÇÕESem variáveis.
+No nosso exemplo, como vamos usar o flights_longo para retornar ao flights anterior? Isto é, transformar cada linha origin em uma coluna origin e cada linha dest em uma coluna dest
+
+id_cols são as colunas que não vamos virar
+names_from são as colunas originais que vão dar nome às colunas novas (no nosso caso vai ser origin e dest),
+values_From vai ser a coluna de onde vão sair os valores para cada linha (no caso vai ser a coluna aeroporto)
+
+```{r}
+flights_longo %>% 
+  pivot_wider(id_cols = c(month, day, dep_time, carrier, flight), 
+              names_from = Direção,
+              values_from = Aeroporto)
+```
+# EXERCÍCIOS Virando tabelas
+1. Use pivot_longer para virar a tabela flights mais longa, para que cada voo tem duas observações - uma para a hora de partida (dep_time) e uma outra para a hora de chegada (arr_time).
+
+```{r}
+
+flights
+
+flights2_execicio <- flights %>% 
+  select(month, day, dep_time, arr_time, carrier, flight, origin, dest) %>% 
+  pivot_longer(cols = c(dep_time, arr_time), names_to = "dep_or_arr", values_to = "time")
+```
+
+2. Usando o seu resultado de questão 1, gere uma tabela estática de 10 linhas selecionadas aleatoriamente por R, mostrando as variáveis carrier, flight, origin, dest e as colunas novas que você gerou na questão 1.
+
+```{r}
+set.seed(101)
+flights2_execicio %>%
+  select(flight, carrier, origin, dest, dep_or_arr, time)%>% 
+  sample_n(10) %>% 
+  kable(caption = "Horários de Chegadas e Saídas dos Voos", col.names =  c("Voo", "Empresa", "Origem", "Destino", "Chegada ou Saída", "Horário"))
+```
+3. Usando o seu resultado de questão 1, use pivot_wider para recuperar o banco de dados original de flights. Verifique que os números de colunas e linhas são íguais.
+
+```{r}
+flights_de_volta <- flights2_execicio %>% 
+  pivot_wider(id_cols = c(month, day, carrier, flight, origin, dest), 
+  names_from =  dep_or_arr,
+  values_from = time)
+
+flights
+flights_de_volta
+```
+
+# Voltando ao R base
+No R base precisamos usar colchetes para buscar linhas e colunas do banco e $ para buscar colunas específicas:
+
+```{r}
+flights[1:10, ]
+#isso é o mesmo que um slice
+
+flights[flights$distance==200,]
+#isso é o mesmo que um filtor
+#leia-se da seguinte forma, em flights, na coluna distance buscar linhas que sejam iguais a 200
+
+flights[, c("year", "month", "day")]
+#isso é o mesmo que um select
+
+```
+
+# Adicionando uma linha com totais no fim da tabela
+a função add.row permite fazer isso mas ela vai precisar de duas sintaxes do R base.
+A primeira é um . que significa olhar para o tibble atual
+a segunda é o $ que significa qual coluna vc quer usar
+
+```{r}
+flights %>% group_by(origin) %>% 
+  tally() %>% 
+  add_row(origin = "Total", n = sum(.$n))
+```
+
