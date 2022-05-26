@@ -1,0 +1,227 @@
+---
+title: "desafio_02"
+author: "amanda_freitas"
+date: '2022-05-26'
+output: html_document
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo=FALSE, error=FALSE, warning=FALSE, message=FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(tidylog)
+library(readr)
+library(DT)
+library(knitr)
+```
+
+#Importando o banco
+
+```{r}
+dados <- read.delim("CENSOESC_2004_RR.csv", sep = "|")
+#head(dados)
+```
+
+# Questão 2 e 3
+
+```{r}
+dados_sem_codfun_paralisado <- dados %>% 
+  filter(CODFUNC == "Ativo")
+
+dados_sem_codfun_paralisado <- dados_sem_codfun_paralisado %>% 
+  select(-UF, -CODFUNC)
+```
+
+2 - Cada observação representa uma escola ativa em Roraima.
+
+3.a - Há 789 escolas no estado. O município com o maior número de escolas é Boa Vista.
+
+3.b - adicionando uma linha com o total de escolas
+
+```{r}
+dados_sem_codfun_paralisado %>% 
+  group_by(MUNIC) %>% 
+  tally() %>% 
+  arrange(-n) %>% 
+  ungroup() %>% 
+  add_row(MUNIC = "Total", n = sum(.$n)) %>% 
+  kable(caption = "Total de escolas por município", col.names = c("Município", "Total de escolas"))
+```
+
+# Questão 4
+4.  a - Quantos professores há no estado de Roraima, e quantos por município:
+
+```{r}
+dados_limp2 <- dados_sem_codfun_paralisado %>% 
+  select(CODIGO_ESCOLA, CODMUNIC, MUNIC, DEP, PROFESS, FUNCION)
+
+dados_profs <- dados_limp2 %>% group_by(MUNIC) %>% 
+  mutate(total_profs = sum(PROFESS)) %>% 
+  select(MUNIC, total_profs) %>% 
+  distinct() %>% 
+  ungroup()
+
+dados_profs %>% 
+  add_row(MUNIC = "TOTAL", total_profs = sum(.$total_profs)) %>% 
+  kable(caption = "Total de professores por município", col.names = c("Município", "Total de Professores"))
+```
+
+4. b - Qual é o porcentagem de professores entre todos os empregados (professores e funcionários) em cada município:
+
+```{r}
+dados_limp3 <-  dados_limp2 %>% 
+  group_by(MUNIC) %>% 
+  mutate(total_profs = sum(PROFESS)) %>% 
+  mutate(total_func = sum(FUNCION)) %>% 
+  select(-CODIGO_ESCOLA, -DEP, -CODMUNIC, -PROFESS, -FUNCION) %>%
+  distinct() %>% 
+  ungroup()
+
+dados_limp3 <-  dados_limp3 %>% group_by(MUNIC) %>% 
+  mutate(total_employees = sum(total_profs, total_func)) %>% 
+  mutate(porct_profs = (total_profs*100)/total_employees) %>% 
+  ungroup()
+
+dados_limp3 %>% select(MUNIC, porct_profs) %>% 
+  kable(caption = "Porcentagem de professores por município em relação ao total de funcionários", 
+        col.names = c("Município", "Porcentagem de professores"), digits = 2)
+
+```
+
+# Questão 5 - 
+Calcule a média e o desvio padrão do número de professores por escola em cada município (inclua uma tabela). Qual município apresenta a maior variabilidade (desvio padrão) no número de professores por escola?
+```{r}
+dados_sem_codfun_paralisado %>%  select(CODIGO_ESCOLA, CODMUNIC, MUNIC, DEP, PROFESS) %>% 
+  group_by(MUNIC) %>% 
+  mutate(mean_profs = mean(PROFESS)) %>% 
+  mutate(sd_profs = sd(PROFESS)) %>% 
+  select(MUNIC, mean_profs, sd_profs) %>% 
+  distinct() %>% 
+  ungroup() %>% 
+  arrange(-sd_profs) %>% 
+  kable(caption = "Média e Desvio Padrão de professores por município", 
+        col.names = c("Município", "Média", "Desvio Padrão"), digits = 2)
+
+```
+
+# Questão 6
+Quantos professores trabalham em cada uma das redes federais, estaduais, municipais e particulares (a variável DEP)? Calcule o porcentagem de professores em cada rede (inclua uma tabela).
+
+```{r}
+dados_sem_codfun_paralisado %>% 
+  group_by(DEP) %>% 
+  mutate(profs_por_dep = sum(PROFESS)) %>% 
+  select(DEP, profs_por_dep) %>% 
+  distinct() %>% 
+  ungroup() %>% 
+  add_row(DEP = "Total", profs_por_dep = sum(.$profs_por_dep)) %>% 
+  group_by(DEP) %>% 
+  mutate(porcentagem_profs_por_dep = (profs_por_dep*100)/7669) %>% 
+  kable(caption = "Professores por rede", col.names = c("Rede", "Professores", "Porcentagem"), digits = 2)
+
+```
+
+# Questão 7 
+Qual é o porcentagem de escolas com laboratório de informático, por município (inclua uma tabela)? Qual é o nome do município com a maior porcentagem de escolas com laboratório de informático?
+
+```{r}
+dados_sem_codfun_paralisado %>% 
+  select(MUNIC, DEP, LAB_INFO) %>% 
+  group_by(MUNIC) %>% 
+  mutate(total_labs = sum(LAB_INFO)) %>% 
+  select(-LAB_INFO, -DEP) %>% 
+  distinct() %>% 
+  mutate(porcent = (total_labs*100)/39) %>% 
+  arrange(-porcent) %>% 
+  ungroup() %>% 
+  add_row(MUNIC = "Total", total_labs = sum(.$total_labs), porcent = sum(.$porcent)) %>% 
+  kable(caption = "Laboratórios de Informática por Município", col.names = c("Município", "Laboratórios", "Porcentagem"), digits = 2)
+```
+
+# Questão 8
+O banco de dados do INEP contém quatro variáveis (VDG1CA, VDG1C1, VDG1C3, VDG1C4) com o número de professores, organizado por nível de ensino.
+
+Vire o banco de dados do formato largo para o formato longo, para que as quatro variáveis VDG1CA, VDG1C1, VDG1C3, VDG1C4 se tornam uma variável que descreve o nível de ensino do professor, e uma outra variável que descreve o número de professores.
+
+```{r}
+dados_sem_codfun_paralisado
+```
+
+
+No novo banco de dados longo, recodifique os valores: VDG1CA para ‘Creche’, VDG1C1 para ‘Pré-escola’, VDG1C3 para ‘Fundamental’, VDG1C4 para ‘Médio’.
+
+```{r}
+
+```
+
+
+Resuma o número de professores por nível de ensino no estado inteiro.
+
+```{r}
+
+```
+
+# Questão 9 
+
+Calcule o total do número de professores e a média por escola em cada nível de ensino em cada município (inclua uma tabela)
+
+```{r}
+
+```
+
+
+Calcule a porcentagem dos professores em cada nível de ensino, por município, em uma tabela. Qual é o município com a maior porcentagem dos seus Professores alocado à nível Fundamental?
+
+```{r}
+
+```
+
+
+Calcule a porcentagem dos professores em cada município, por nível de ensino, em uma tabela. (Observe que isso é sutilmente diferente da questão em (b) acima). Qual é o município com a maior porcentagem de todos os Professores de Ensino Fundamental no páis?
+
+```{r}
+
+```
+
+
+# Questão 10
+
+Voltando para o seu banco de dados ‘largo’, gere uma amostra aleatória de duas escolas estaduais em cada município. Mostre os resultados numa tabela.
+
+```{r}
+
+```
+
+# Questão 11
+Agora, queremos gerar uma tabela com nomes dos municípios nas linhas e a rede (Estadual, Municipal, Federal, Particular; variável DEP) nas colunas. Nas células, colocamos o número de escolas de cada rede em cada município. Há vários jeitos de realizar isso, mas vamos seguir os passos abaixo:
+
+Calcule o número de escolas por município e rede. Todas as redes existem em todos os municípios?
+
+```{r}
+
+```
+
+
+Transforme as variáveis do município e rede em fatores.
+
+```{r}
+
+```
+
+
+Use complete (de Tutorial 3) para criar uma tabela ‘completa’ com todas as combinações de município e rede possível, mesmo que não existe uma rede específica num município específico. Preenche os valores NA com ‘0’, porque já sabemos que não temos escolas nestes casos.
+
+```{r}
+
+```
+
+
+Use uma função de pivot para virar o tibble e gerar o tamanho de tabela desejada (municípios nas linhas, redes nas colunas).
+
+```{r}
+
+```
+
+
