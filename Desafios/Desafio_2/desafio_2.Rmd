@@ -84,9 +84,9 @@ dados_limp3 <-  dados_limp3 %>% group_by(MUNIC) %>%
   mutate(porct_profs = (total_profs*100)/total_employees) %>% 
   ungroup()
 
-dados_limp3 %>% select(MUNIC, porct_profs) %>% 
+dados_limp3 %>% select(MUNIC, total_profs, total_func,porct_profs) %>% 
   kable(caption = "Porcentagem de professores por município em relação ao total de funcionários", 
-        col.names = c("Município", "Porcentagem de professores"), digits = 2)
+        col.names = c("Município", "Professores", "Funcionários", "Porcentagem de professores"), digits = 2)
 
 ```
 
@@ -128,10 +128,10 @@ Qual é o porcentagem de escolas com laboratório de informático, por municípi
 
 ```{r}
 dados_sem_codfun_paralisado %>% 
-  select(MUNIC, DEP, LAB_INFO) %>% 
+  select(MUNIC, LAB_INFO) %>% 
   group_by(MUNIC) %>% 
   mutate(total_labs = sum(LAB_INFO)) %>% 
-  select(-LAB_INFO, -DEP) %>% 
+  select(-LAB_INFO) %>% 
   distinct() %>% 
   mutate(porcent = (total_labs*100)/39) %>% 
   arrange(-porcent) %>% 
@@ -145,30 +145,47 @@ O banco de dados do INEP contém quatro variáveis (VDG1CA, VDG1C1, VDG1C3, VDG1
 
 Vire o banco de dados do formato largo para o formato longo, para que as quatro variáveis VDG1CA, VDG1C1, VDG1C3, VDG1C4 se tornam uma variável que descreve o nível de ensino do professor, e uma outra variável que descreve o número de professores.
 
-```{r}
-dados_sem_codfun_paralisado
-```
-
-
 No novo banco de dados longo, recodifique os valores: VDG1CA para ‘Creche’, VDG1C1 para ‘Pré-escola’, VDG1C3 para ‘Fundamental’, VDG1C4 para ‘Médio’.
 
 ```{r}
+dados_longo_nomes_niveis_ensino <- dados_sem_codfun_paralisado %>% 
+  pivot_longer(cols=c(VDG1CA, VDG1C1, VDG1C3, VDG1C4), 
+                                             names_to = "nivel_ensino_profs", 
+                                             values_to = "num") %>% 
+  mutate(nivel_ensino_profs = 
+           case_when(nivel_ensino_profs %in% "VDG1CA"~"Creche",
+                     nivel_ensino_profs %in% "VDG1C1"~"Pre-escola",
+                     nivel_ensino_profs %in% "VDG1C3"~"Fundamental",
+                     nivel_ensino_profs %in% "VDG1C4"~"Medio"))
 
+dados_longo_nomes_niveis_ensino %>% select(MUNIC, nivel_ensino_profs, num) %>% head(5)
 ```
-
 
 Resuma o número de professores por nível de ensino no estado inteiro.
 
 ```{r}
-
+dados_longo_nomes_niveis_ensino %>% select(nivel_ensino_profs, num) %>% 
+  group_by(nivel_ensino_profs) %>% 
+  mutate(profs_por_nivel = sum(num)) %>% 
+  select(-num) %>% 
+  distinct() %>% 
+  ungroup() %>% 
+  add_row(nivel_ensino_profs = "TOTAL", profs_por_nivel = sum(.$profs_por_nivel)) %>% 
+  kable(caption = "Professores por nível de ensino", col.names = c("Nível de Ensino", "Professores"))
 ```
 
 # Questão 9 
 
-Calcule o total do número de professores e a média por escola em cada nível de ensino em cada município (inclua uma tabela)
+Calcule a média por escola em cada nível de ensino em cada município (inclua uma tabela)
 
 ```{r}
-
+dados_longo_nomes_niveis_ensino %>% 
+  select(MUNIC, DEP, PROFESS, nivel_ensino_profs, num) %>% 
+  group_by(MUNIC, nivel_ensino_profs) %>% 
+  mutate(media_por_nivel = mean(num)) %>% 
+  select(-DEP, -num, -PROFESS) %>% 
+  distinct() %>% 
+  kable(caption = "Média de professores em cada nível de ensino por município", col.names = c("Município", "Nível de Ensino","Média"), digits = 2)
 ```
 
 
@@ -176,13 +193,45 @@ Calcule a porcentagem dos professores em cada nível de ensino, por município, 
 
 ```{r}
 
+dados_exercicio_9
+  
+  dados_exercicio_9 <- dados_longo_nomes_niveis_ensino %>% 
+  group_by(MUNIC, nivel_ensino_profs) %>% 
+  mutate(profs_por_nivel = sum(num))  %>% 
+  select(-DEP, -LAB_INFO, -BIBLIO, -CODMUNIC, -CODIGO_ESCOLA, -FUNCION, -PROFESS, -num) %>% 
+  distinct() %>% 
+  group_by(MUNIC) %>% 
+  mutate(total_profs_munic = sum(profs_por_nivel)) %>% 
+  group_by(MUNIC, nivel_ensino_profs) %>% 
+  mutate(porc_por_nivel_munic = (100*profs_por_nivel)/total_profs_munic)
+  
+
+  dados_exercicio_9 %>% select(MUNIC, nivel_ensino_profs, porc_por_nivel_munic) %>% 
+    kable(caption = "Porcentagem de professores de cada nível de ensino por municipio", col.names = c("Município", "Nível", "Porcentagem de professores"))
+
+#só ensino fundamental
+  
+dados_exercicio_9 %>% ungroup() %>% 
+  filter(nivel_ensino_profs == "Fundamental") %>% 
+  select(MUNIC, porc_por_nivel_munic) %>% 
+  arrange(-porc_por_nivel_munic) %>% 
+   kable(caption = "Porcentagem de professores no ensino fundamental por município", col.names = c("Município", "Porcentagem de professores"))
+  
 ```
 
 
 Calcule a porcentagem dos professores em cada município, por nível de ensino, em uma tabela. (Observe que isso é sutilmente diferente da questão em (b) acima). Qual é o município com a maior porcentagem de todos os Professores de Ensino Fundamental no páis?
 
 ```{r}
+dados_longo_nomes_niveis_ensino %>% 
+  group_by(MUNIC, nivel_ensino_profs) %>% 
+  mutate(profs_por_nivel = sum(num)) %>% 
+  select(MUNIC, nivel_ensino_profs, profs_por_nivel) %>% 
+  distinct() %>% 
+  group_by(nivel_ensino_profs) %>% 
+  mutate(porcent = (profs_por_nivel*100)/6812)
 
+#6812
 ```
 
 
@@ -191,7 +240,14 @@ Calcule a porcentagem dos professores em cada município, por nível de ensino, 
 Voltando para o seu banco de dados ‘largo’, gere uma amostra aleatória de duas escolas estaduais em cada município. Mostre os resultados numa tabela.
 
 ```{r}
-
+set.seed(1998)
+dados_sem_codfun_paralisado %>% 
+  filter(DEP == "Estadual") %>% 
+  group_by(MUNIC) %>% 
+  sample_n(2) %>% 
+  select(CODIGO_ESCOLA, MUNIC) %>% 
+  kable(caption = "Amostra aleatória de 2 escolas estaduais por município", col.names = c("Código Escola", "Município"))
+  
 ```
 
 # Questão 11
@@ -199,21 +255,26 @@ Agora, queremos gerar uma tabela com nomes dos municípios nas linhas e a rede (
 
 Calcule o número de escolas por município e rede. Todas as redes existem em todos os municípios?
 
-```{r}
-
-```
-
+  Não, não há todas as redes em todos os municípios.
 
 Transforme as variáveis do município e rede em fatores.
-
-```{r}
-
-```
-
 
 Use complete (de Tutorial 3) para criar uma tabela ‘completa’ com todas as combinações de município e rede possível, mesmo que não existe uma rede específica num município específico. Preenche os valores NA com ‘0’, porque já sabemos que não temos escolas nestes casos.
 
 ```{r}
+
+escolas_por_Rede <- dados_sem_codfun_paralisado %>% group_by(MUNIC, DEP) %>% 
+  tally() %>% 
+  ungroup()
+  
+escolas_por_Rede$MUNIC <- as.factor(escolas_por_Rede$MUNIC)
+escolas_por_Rede$DEP <- as.factor(escolas_por_Rede$DEP)
+
+escolas_por_Rede2 <-  escolas_por_Rede %>% complete(MUNIC, DEP)
+
+escolas_por_Rede2[is.na(escolas_por_Rede2)] <- 0
+
+escolas_por_Rede2
 
 ```
 
@@ -221,7 +282,13 @@ Use complete (de Tutorial 3) para criar uma tabela ‘completa’ com todas as c
 Use uma função de pivot para virar o tibble e gerar o tamanho de tabela desejada (municípios nas linhas, redes nas colunas).
 
 ```{r}
-
+escolas_por_Rede2 %>% 
+  pivot_wider(id_cols = c(MUNIC), 
+              names_from = DEP,
+              values_from = n) %>% 
+  add_row(MUNIC = "TOTAL", Estadual = sum(.$Estadual), Federal = sum(.$Federal), Municipal = sum(.$Municipal), Particular = sum(.$Particular)) %>% 
+     kable(caption = "Escolas por rede de ensino em cada Município", col.names = c("Município", "Estadual", "Federal", "Municipal", "Particular"))
+ 
 ```
 
 
