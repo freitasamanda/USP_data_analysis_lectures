@@ -1,0 +1,115 @@
+---
+title: "desafio_03"
+author: "Amanda Freitas"
+date: '2022-06-04'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(tidylog)
+library(ggplot2)
+library(readr)
+library(DT)
+```
+
+```{r}
+
+candidatos <- read.csv("candidatos_2016_RR.csv", sep = ";")
+
+resultados <- read.csv("resultados_2016_RR.csv", sep = ";")
+
+head(candidatos)
+head(resultados)
+
+#limpando colunas inuteis
+candidatos_limpo <- candidatos %>% 
+select(SQ_CANDIDATO, NM_CANDIDATO, NM_UE, SG_PARTIDO, NR_IDADE_DATA_POSSE, DS_GENERO, DS_GRAU_INSTRUCAO, DS_COR_RACA)
+
+head(candidatos_limpo)
+
+
+```
+
+# Exercício 3
+
+3.a.Identifique a unidade de análise do banco de candidatos - o que representa cada observação/linha? Quais variáveis identificam cada linha exclusivamente?
+
+Cada observação representa um candidato a vereador
+As variáveis que identificam-nos exclusivamente são SQ_CANDIDATO, NR_CANDIDATO e NM_CANDIDATO
+
+3.b. Identifique a unidade de análise do banco de resultados - o que representa cada observação/linha? Quais variáveis identificam cada linha exclusivamente?
+
+Cada observação no banco "resultados" representa um resultado para o candidato.
+Os identificadores exclusivos são SQ_CANDIDATO e NM_CANDIDATO
+
+Variáveis que compõem o identificador comum: 
+SQ_CANDIDATO e NM_CANDIDATO
+
+Verificando informações faltantes com anti_join:
+```{r}
+
+candidatos_limpo %>% 
+  anti_join(resultados, by = c("SQ_CANDIDATO", "NM_CANDIDATO"))
+#125 linhas em candidao
+
+resultados %>% 
+  anti_join(candidatos_limpo, by = c("SQ_CANDIDATO", "NM_CANDIDATO"))
+
+```
+
+Há 125 linhas faltantes em resultados e 19 linhas faltantes em candidatos.
+
+# Exercício 4
+```{r}
+candidatos_resultados1 <- candidatos_limpo %>% 
+  left_join(resultados, by = c("SQ_CANDIDATO", "NM_CANDIDATO", "SG_PARTIDO"))
+
+head(candidatos_resultados1)
+```
+
+# Exercício 5
+```{r}
+resultados_exc_5 <- resultados %>% 
+  group_by(SQ_CANDIDATO) %>% 
+  mutate(votos_por_cand = sum(QT_VOTOS_NOMINAIS)) %>% 
+  ungroup() %>% 
+  select(-QT_VOTOS_NOMINAIS, -NR_ZONA) %>% 
+  distinct()
+
+head(resultados_exc_5)
+
+```
+
+Incorporando os candidatos:
+```{r}
+candidatos_resultados_limpos <- candidatos_limpo %>% 
+  left_join(resultados_exc_5, by = c("SQ_CANDIDATO", "NM_CANDIDATO", "SG_PARTIDO"))
+
+head(candidatos_resultados_limpos)
+```
+# Exercício 6
+```{r}
+candidatos_resultados2 %>% anti_join(resultados_exc_5)
+
+candidatos_resultados_full_join <- candidatos_limpo %>% full_join(resultados_exc_5, by = c("SQ_CANDIDATO", "NM_CANDIDATO", "SG_PARTIDO"))
+
+head(candidatos_resultados_full_join)
+
+```
+
+# Exercício 7
+Para o nosso primeiro gráfico, vamos apresentar o número de candidatos para vereador por município (variável NM_UE).
+```{r}
+
+candidatos_resultados_limpos %>% 
+  group_by(NM_UE) %>% 
+  ggplot() +
+  geom_bar(aes(x = NM_UE))
+
+```
+
