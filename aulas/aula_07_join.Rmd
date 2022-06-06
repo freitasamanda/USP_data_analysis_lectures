@@ -1,0 +1,259 @@
+---
+title: "aula_07_join"
+author: "amanda_freitas"
+date: '2022-06-03'
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r}
+library(tidyverse)
+library(tidylog)
+library(nycflights13)
+library(knitr)
+```
+
+temos que entender os dois bancos:
+(i) qual é a unidade de análise de cada observaçao?;
+(ii) quais são os identificadores únicos (as variáveis ‘chaves’) em cada banco que identificam unicamente cada observação (evitando duplicações)?;
+(iii) quais são os identificadores comuns presentes em ambos os bancos que permitem cruzar as informações?
+
+passos preparatórios:
+(1) Decidir a unidade de análise do banco de dados final,
+(2) Se necessário, agregar os bancos de dados iniciais para a unidade de análise desejado,
+(3) Transformar as variáveis para que temos um identificador comum entre os banco de dados.
+
+```{r}
+flights
+weather
+airlines
+
+flights %>% 
+  group_by(carrier) %>% 
+  tally() %>% 
+  left_join(airlines, by = "carrier")
+
+flights %>% 
+  left_join(weather, by = c("year", "month", "day", "hour", "origin"))
+
+```
+
+# Nesting
+criando bases de dados "dentro de céculas"
+tem um tibble dentro de cada origin
+```{r}
+flights %>% 
+  group_by(origin) %>% 
+  nest()
+
+#vamos puxar só a base de dados que estava dentro de EWR
+
+
+flights %>% 
+  group_by(origin) %>% 
+  nest() %>% 
+  filter(origin == "EWR") %>% 
+  pull(data)
+
+```
+
+# Exercício 1
+```{r}
+df <- tibble(ID = c("A001", "A002", "A003"), Valor = c(10,20,50))
+
+df
+
+df2 <- tibble(ID = c("A001", "A002", "A003"), Populacao = c(3000, 2500, 6000))
+
+df2
+
+df %>% left_join(df2, by = "ID")
+```
+2. flights e planes apenas para carrier == "UA" no day == 16 month == 07
+e qual é o model mais comum
+O modelo mais comum `r modelo_mais_comum`
+
+```{r}
+#flights
+#planes
+
+#a var em que vou juntar é tailnum
+
+flights_carrier_UA <- flights %>% 
+  filter(carrier == "UA" & day == 16 & month == 7)
+  
+flights_planes <- flights_carrier_UA %>% 
+  left_join(planes, by = c("tailnum", "year"))
+ 
+flights_planes_models <- flights_planes %>% group_by(model) %>% 
+  tally() %>% 
+  arrange(-n)
+
+modelo_mais_comum <- pull(flights_planes_models[1,1])
+
+```
+
+3. quantos seats totais em cada mes origin == JFK
+dest == ATL
+
+```{r}
+flights
+planes
+
+flights2 <- 
+  flights %>% 
+  filter(origin == "JFK" & dest == "ATL")
+
+flights2 <- flights_JFK_to_ATL %>% 
+  left_join(planes, by = c("tailnum"))
+
+flights2.2 <- flights2  %>% 
+  select(month, seats)
+
+flights2.2$seats <- as.double(flights2.2$seats)
+
+
+flights2.2 %>% 
+  group_by(month) %>% 
+  mutate(total_seats_por_mes = sum(seats, na.rm = T)) %>% 
+  select(month, total_seats_por_mes) %>% 
+  ungroup() %>% 
+  distinct() %>% 
+  arrange(month)
+ 
+
+```
+4. Queremos um resumo do número de voos no ano de 2013 por companhia aérea. Mas o nosso banco de flights não contém o nome oficial das companhias. Execute um join entre os banco de dados flights e airlines para criar uma tabela resumida e clara
+
+```{r}
+flights
+airlines
+
+
+flights_com_airlines <- flights %>% 
+  left_join(airlines, by = "carrier")
+
+flights_com_airlines %>% 
+  select(carrier, name) %>% 
+  group_by(carrier, name) %>% 
+  tally() %>%  
+  arrange(-n) %>% 
+    kable(caption = "Número de voos por companhia aérea", col.names = c("carrier", "nome da companhia", "número de voos"))
+
+```
+
+# Juntando por múltiplas variáveis
+A conclusão é simples: sempre inclua todas as variáveis que são identificadores comuns nos dois bancos de dados. Se a left_join() aumenta o número de linhas entre o seu primeiro banco e o resultado, isto significa que existe mais de uma observação no segundo banco com os mesmos valores de variáveis identificadores
+
+```{r}
+flights
+weather
+
+flights_weather <- 
+  flights %>% 
+  left_join(weather, c("origin", "year", "month", "day", "hour"))
+
+```
+# Bancos com dados faltantes
+inner_join funciona igual left_join, porém remove as observações que não existem nos dois bancos:
+
+```{r}
+
+flights %>% inner_join(planes, by = c("tailnum"))
+  
+
+flights %>% 
+  anti_join(planes, by = c("tailnum"))
+```
+
+Quantas observações existem no resultado? 284170, a diferença entre o número de observações em flights (336776) e os voos sem tailnum em planes, o resultado de anti_join que executamos acima (52606). É uma boa exercício verificar.
+
+
+juntando os bancos de airports e flights, a coluna dest e a coluna faa são a mesma coisa mas tem nomes diferentes, então renomeie ela:
+```{r}
+airports2 <- airports %>% 
+  rename(dest=faa)
+
+flights %>% left_join(airports2, by=c("dest"))
+
+#podemos selecionar só as colunas que queremos dentro do próprio left_join
+
+
+
+flights %>% left_join(airports2 %>% select(dest, name), 
+                      by=c("dest"))
+
+
+```
+
+left_join preserva os dados de flights, isto é, do banco antes do pipe, enquanto right_join preserva os dados do banco depois do pipe
+
+full_join preserva todas as observações possíveis, mesmo que elas não tenham nos bancos
+
+```{r}
+
+flights %>% right_join(airports, by=c("dest"))
+
+
+flights %>% full_join(airports, by=c("dest"))
+
+```
+
+# EXERCÍCIO 2
+```{r}
+df1 <- tibble(ID = c("A001", "A001", "A002", "A003", "A003"), Ano = c(2019, 2020, 2020, 2019, 2020), Valor = c(10, 12, 17, 50, 64))
+
+df2 <- tibble(ID = c("A001", "A002", "A002", "A003"), Ano = c(2019, 2019, 2020, 2019), Populacao = c(3000, 2500, 1900, 6000))
+
+df1 %>% 
+  left_join(df2, by = c("ID", "Ano"))
+
+df1 %>% right_join(df2, by = c("ID", "Ano"))
+
+#só as que estao completas
+df1 %>% inner_join(df2, by = c("ID", "Ano"))
+
+#todas mesmo as nao completas
+df1 %>% full_join(df2, by = c("ID", "Ano"))
+
+```
+precip média
+origin == LGA
+month == 12
+
+```{r}
+flights3 <- 
+  flights %>% 
+  select(month, day, hour, dep_time, carrier, origin, dest)
+
+flights_LGA_dec <- flights3 %>% 
+  filter(origin == "LGA" & month == 12)
+
+flights_LGA_dec %>% left_join(
+  weather %>% 
+    select(origin, month, day, hour, precip), by = c("month", "day", "hour", "origin")
+) %>% 
+  select(day, precip) %>% 
+  group_by(day) %>% 
+  mutate(precip_media = mean(precip, na.rm = T)) %>%
+  select(day, precip_media) %>% 
+  ungroup() %>% 
+  distinct() 
+
+
+weather
+```
+
+3.b Para quantos voos em cada dia de dezembro em LGA faltamos dados de tempo?
+```{r}
+
+flights_LGA_dec %>% right_join(weather, by = c("month", "day", "hour", "origin"))
+
+
+
+weather
+
+```
+
