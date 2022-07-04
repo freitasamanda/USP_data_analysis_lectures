@@ -1,0 +1,68 @@
+---
+title: "aula_09_testes"
+author: "Amanda Freitas"
+date: '2022-06-24'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(nycflights13)
+library(broom)
+```
+
+
+A variável dependente sempre fica na esquerda, e está separada das variáveis independentes com o símbolo ~. Por exemplo:
+
+dependente ~ independente
+
+# Testes de normalidade
+
+testes de normalidade = 
+shapiro.test() e ela espera um vetor dos valores da variável que queremos testar
+
+```{r}
+#só usar até 5.000 observações, então vamos gerar uma amostra aleatória
+teste_normalidade <- 
+  flights %>% 
+  sample_n(3000) %>% 
+  pull(dep_delay) %>% 
+  shapiro.test() %>% 
+  tidy()
+
+teste_normalidade
+
+```
+
+O valor ‘p’ é bem pequeno aqui, indicando que tem pouco chance que os nossos dados são normais. Com um gráfico de densidade podemos ver que realmente. Podemos inserir no relatório como:
+
+O teste Shapiro-Wilk de normalidade da variável dep_delay tem valor ‘p’ de `r teste_normalidade %>% pull(p.value) %>% round(3)`.
+
+```{r}
+flights %>% 
+  ggplot() +
+  geom_density(aes(x=dep_delay)) +
+  xlim(0,100)
+```
+
+
+# Teste de Médias
+
+
+teste.t = uma var contínua e uma categórica
+
+# Correlação - associação entre duas variáveis contínuas
+```{r}
+
+teste_Correlacao <- 
+  flights %>% 
+  cor.test(~ dep_delay + dep_time, data=.)
+
+teste_Correlacao
+
+```
+Sempre padronizado entre -1 e 1.

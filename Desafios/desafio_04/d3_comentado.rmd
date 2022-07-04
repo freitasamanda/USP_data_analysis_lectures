@@ -1,0 +1,376 @@
+---
+title: "Desafio 3: Combinação e Visualização de Dados"
+author: ""
+date: '2022-06-15'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, warning = F, message = F)
+rm(list = ls())
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(kableExtra)
+library(tidyverse)
+library(tidylog)
+library(scales)
+```
+
+### 2 - Open both databases with the appropriate separator.
+```{r}
+results <- read_delim("~/Documents/R/R_para_analise_de_dados/Desafio3/resultados_desafio3.txt", delim=";") 
+candidates <- read_delim("~/Documents/R/R_para_analise_de_dados/Desafio3/candidatos_desafio3.txt", delim=";")
+```
+
+### 3 - Mergin both databases
+#### 3.a - Unit of Analysis and identifying variable from Candidates database
+
+Here, the unit of analysis is the *potential* candidates for the 2016 elections for Councillors in Roraima state. The "potential" feature is important because, as we will see in the remainder of this exercise, there will be some candidates here that do not appear in the results database for some reason (see 3.e answer).
+
+
+```{r}
+candidates %>% distinct(SQ_CANDIDATO) %>% slice(1:10)
+# I slice for the first 10 observations for the sake of brevity and cleanness in the html file
+# I repeat this practice in a number of exercises to follow
+```
+Obs.: For the sake of cleanness and brevity in the .html output file, I will slice for the first 10 observations and select for some relevant columns from the resulting tables when some adjustment is asked for in each exercise. The purpose of this is to present the results of the adjustments avoiding pollution of the html file.
+
+#### 3.b - Unit of Analysis and identifying variable from Results database
+
+In this case, the unit of analysis is the result of the 2016 elections for Councillors in Roraima state for a candidate in a specific voting zone. It is thus possible to have more than one unit of analysis for the same candidate, in the case each of these units should diverge in voting zone.
+
+```{r}
+results %>% distinct(SQ_CANDIDATO, CD_MUNICIPIO, NR_ZONA) %>% slice(1:10)
+```
+
+#### 3.c - Common identifier for merging
+
+It is possible to affirm that SQ_CANDIDATO is the common identifier for merging purposes.
+
+
+#### 3.d - Using anti_join() to check if there are missing details in Results of candidates in Cadidates database. 
+
+```{r}
+results %>% anti_join(candidates, by = "SQ_CANDIDATO") %>% slice(1:10)
+```
+
+#### 3.e - Using anti_join() to check if there are missing Candidates in Results database. 
+
+```{r}
+candidates %>% anti_join(results, by = "SQ_CANDIDATO") %>% slice(1:10) %>% select(DT_GERACAO, SQ_CANDIDATO, NM_CANDIDATO)
+# I select for some columns for the sake of brevity and cleanness in the html file
+# I repeat this practice in a number of exercises to follow
+```
+
+It is possible to note that the candidates that are not included in the results database are the ones who are inept to run for the elections. The "DS_SITUACAO_CANDIDATURA" column allow us to check for this.
+
+#### 3.f - Dropping unnecessary columns
+
+```{r}
+candidates <- candidates %>% select(SQ_CANDIDATO, NM_CANDIDATO, NM_UE, 
+                                    SG_PARTIDO, NR_IDADE_DATA_POSSE, 
+                                    DS_GENERO, DS_GRAU_INSTRUCAO, DS_COR_RACA)
+```
+
+
+### 4 - Appropriate left_joing() allowing for duplicates in cadidates data for each result.
+
+```{r}
+results %>% left_join(candidates, by = "SQ_CANDIDATO") %>% slice(1:10) %>% select(SQ_CANDIDATO, NM_MUNICIPIO,DS_SIT_TOT_TURNO,NM_CANDIDATO.x)
+```
+
+### 5 - Avoiding duplication of candidate data: Aggregating Results database to same Unit of Analysis from Candidates database.
+#### 5.a - Sum of candidates' votes in several zones (including DS_SIT_TOT_TURNO).
+
+```{r}
+results_agg <- results %>% group_by(SQ_CANDIDATO,DS_SIT_TOT_TURNO) %>% 
+  summarize(QT_VOTOS_NOMINAIS = sum(QT_VOTOS_NOMINAIS, na.rm = T)) %>% 
+  ungroup()
+
+results_agg %>% select(SQ_CANDIDATO, DS_SIT_TOT_TURNO,QT_VOTOS_NOMINAIS) %>% slice(1:10)
+```
+
+#### 5.b - Appropriate left_join() to incorporate Candidates' data.
+```{r}
+results_agg_candidates <- results_agg %>% 
+  left_join(candidates, by = "SQ_CANDIDATO")
+
+results_agg_candidates %>% select(SQ_CANDIDATO, DS_SIT_TOT_TURNO,QT_VOTOS_NOMINAIS, NM_CANDIDATO) %>% slice(1:10)
+```
+
+#### 6.a - An appropriate join that covers all candidates including those with no results.
+```{r}
+candidates_results_agg <- results_agg %>% 
+  right_join(candidates, by = "SQ_CANDIDATO")
+
+candidates_results_agg %>% select(SQ_CANDIDATO, DS_SIT_TOT_TURNO,QT_VOTOS_NOMINAIS, NM_CANDIDATO) %>% slice(1:10)
+```
+
+#### 6.b - Adjusting how was the QT_VOTOS_NOMINAIS column filled in 6.a to count for 0 votes.
+```{r}
+candidates_results_agg <- candidates_results_agg %>% 
+  mutate(QT_VOTOS_NOMINAIS = case_when(is.na(QT_VOTOS_NOMINAIS) ~ 0, T ~ QT_VOTOS_NOMINAIS))
+
+candidates_results_agg %>% select(SQ_CANDIDATO, DS_SIT_TOT_TURNO,QT_VOTOS_NOMINAIS, NM_CANDIDATO) %>% slice(1:10)
+```
+
+
+### 7 - Plot number of candidates Councilors by municipality (NM_UE).
+
+```{r}
+results_agg_candidates %>% ggplot() +
+  geom_bar(aes(x = NM_UE), fill = "#2C84BC") +
+  ggtitle("Number of Councilors Candidates by Municipality") +
+  xlab("Municipality") + ylab("Number of Councilors Candidates") +
+  theme(axis.text.x = element_text(size = 7, angle = 90))
+```
+
+### 8 - Plot number of candidates by gender in the state.
+
+```{r}
+results_agg_candidates %>% ggplot() +
+  geom_bar(aes(x = DS_GENERO), fill = "#2C84BC") +
+  ggtitle("Number of Councilors Candidates by Gender") +
+  xlab("Gender") + ylab("Number of Councilors Candidates") +
+  theme_light()
+```
+
+### 9 - Plot percentage of candidates by gender in each municipality
+```{r}
+results_agg_candidates %>% group_by(NM_UE, DS_GENERO) %>% tally() %>% 
+  ggplot() + 
+  geom_col(aes(x = NM_UE, y = n, fill = DS_GENERO), position = "fill") +
+  ggtitle("Percentage of Councilors Candidates by Gender and Municipality") +
+  xlab("Municipality") + ylab("Percentage of Councilors Candidates by Gender") +
+  theme (axis.text.x = element_text(size = 7, angle = 90), 
+         legend.position= "bottom")
+```
+
+### 10 - Success rate of candidates by gender.
+#### 10.a - Binary variable indicating election results (elected or not).
+
+```{r}
+results_agg_candidates <- results_agg_candidates %>% 
+  mutate(elected_binary = case_when(DS_SIT_TOT_TURNO %in%
+                             c("ELEITO POR QP","ELEITO POR MÉDIA", "ELEITO")~ 1, 
+                           T ~ 0 ))
+
+results_agg_candidates %>% slice(1:10) %>% select(SQ_CANDIDATO,NM_CANDIDATO ,elected_binary)
+```
+
+#### 10.b - Success rate of candidates by gender.
+```{r}
+succ_rate_by_gender_mun <- results_agg_candidates %>% 
+  group_by(NM_UE, DS_GENERO, elected_binary) %>% tally() %>% 
+  group_by(NM_UE, DS_GENERO) %>% 
+  mutate(percentage_elected = 100*n/sum(n, na.rm = T)) %>% ungroup() %>% 
+  select(-n)
+
+succ_rate_by_gender_mun %>% slice(1:10)
+```
+
+#### 10.c - Bar plot success rate of feminine candidates by municipality.
+```{r}
+succ_rate_by_gender_mun %>% 
+  filter(DS_GENERO == "FEMININO", elected_binary == 1) %>% 
+  ggplot() + geom_col(aes(x = NM_UE, y = percentage_elected), fill = "#2C84BC") +
+  ggtitle("Percentage of Feminine Councilors Candidates Elected by Municipality") +
+  xlab("Municipality") + ylab("Percentage of Feminine Councilors Candidates Elected") +
+  theme_light() +
+  theme (axis.text.x = element_text(size = 7, angle = 90))
+```
+
+#### 10.d - Bar plot success rate of candidates by gender and municipality.
+```{r}
+succ_rate_by_gender_mun %>% 
+  filter(elected_binary == 1) %>% 
+  ggplot() + geom_col(aes(x = NM_UE, y = percentage_elected, fill = DS_GENERO), position = "dodge") +
+  ggtitle("Percentage of Councilors Candidates Elected by Gender and Municipality") +
+  xlab("Municipality") + ylab("Percentage of Councilors Candidates Elected") +
+  theme_light() +
+  theme (axis.text.x = element_text(size = 7, angle = 90))
+```
+
+#### 10.e - Municipality in which feminine success rate is greater than masculine's.
+```{r}
+mun_fem_succ <- succ_rate_by_gender_mun %>% filter(elected_binary == 1) %>% 
+  pivot_wider(names_from = "DS_GENERO", values_from = "percentage_elected") %>% 
+  filter(FEMININO > MASCULINO) %>% pull(NM_UE)
+```
+
+The municipality in which feminine success rate is greater than masculine's success rate is `r mun_fem_succ`.
+
+### 11 - Tile polt with number of candidates by municipality and gender.
+```{r}
+results_agg_candidates %>% group_by(NM_UE, DS_GENERO) %>% tally() %>% 
+  ggplot() + geom_tile(aes(x = DS_GENERO, y = NM_UE, fill = n)) +
+  scale_fill_gradient(low = "#5fb3e8", high = "#19567d") + theme_light() +
+  ggtitle("Number of Councilors Candidates by Gender and Municipality") +
+  xlab("Gender") + ylab("Municipality")
+```
+
+### 12 - Candidates' age exploration
+#### 12.a - Appropriate histogram of candidates' age.
+```{r}
+results_agg_candidates %>% mutate(NR_IDADE_DATA_POSSE = 
+                                    case_when(NR_IDADE_DATA_POSSE == 
+                                                999 ~ NA_real_, T ~ NR_IDADE_DATA_POSSE)) %>% 
+  ggplot() + geom_histogram(aes(x = NR_IDADE_DATA_POSSE)) + theme_light() +
+  ggtitle("Histogram of Candidates' Age") +
+  xlab("Age") + ylab("Number of Candidates")
+```
+
+#### 12.b - Appropriate histograms of candidates' age by gender.
+```{r}
+results_agg_candidates %>% mutate(NR_IDADE_DATA_POSSE = 
+                                    case_when(NR_IDADE_DATA_POSSE == 
+                                                999 ~ NA_real_, T ~ NR_IDADE_DATA_POSSE)) %>% 
+  ggplot() + geom_histogram(aes(x = NR_IDADE_DATA_POSSE, fill = DS_GENERO), position = "dodge") + 
+  theme_light() + ggtitle("Histogram of Candidates' Age by Gender") +
+  xlab("Age") + ylab("Number of Candidates")
+```
+
+#### 12.c - Appropriate facets histograms of candidates' age by gender and race.
+```{r}
+results_agg_candidates %>% mutate(NR_IDADE_DATA_POSSE = 
+                                    case_when(NR_IDADE_DATA_POSSE == 
+                                                999 ~ NA_real_, T ~ NR_IDADE_DATA_POSSE)) %>% 
+  ggplot() + geom_histogram(aes(x = NR_IDADE_DATA_POSSE, fill = DS_GENERO)) + 
+  theme_light() + ggtitle("Histogram of Candidates' Age by Gender and Race") +
+  xlab("Age") + ylab("Number of Candidates") +
+  facet_grid(rows = vars(DS_COR_RACA), cols = vars(DS_GENERO))
+```
+
+### 13 - Analysis of Election Results
+#### 13.a - Percentage of votes for Councillers in each municipality
+```{r}
+results_agg_candidates <- results_agg_candidates %>% group_by(NM_UE) %>% 
+  mutate(percentage_of_votes = 100*QT_VOTOS_NOMINAIS/sum(QT_VOTOS_NOMINAIS,na.rm=T))
+
+results_agg_candidates %>% select(SQ_CANDIDATO, NM_CANDIDATO, NM_UE, percentage_of_votes) %>% slice(1:10)
+```
+
+#### 13.b - Mean percentage of votes by age
+```{r}
+candidates_mean_votes_by_age <- results_agg_candidates %>% 
+  mutate(NR_IDADE_DATA_POSSE = case_when(NR_IDADE_DATA_POSSE == 999 ~ NA_real_,
+                                         T ~ NR_IDADE_DATA_POSSE)) %>% 
+  group_by(NR_IDADE_DATA_POSSE) %>% summarize(mean_percentage_votes = 
+                                                mean(percentage_of_votes, na.rm = T))
+
+candidates_mean_votes_by_age %>% slice(1:10)
+```
+
+#### 13.c - Line plot mean percentage votes by age
+```{r}
+candidates_mean_votes_by_age %>% ggplot() +
+  geom_line(aes(x = NR_IDADE_DATA_POSSE, y = mean_percentage_votes)) +
+  ggtitle("Mean Percentage of Votes by Age") +
+  xlab("Age") + ylab("Mean Percentage of Votes") + theme_light()
+```
+
+#### 13.d - Line plot mean percentage votes by age and gender
+```{r}
+candidates_mean_votes_by_age_gender <- results_agg_candidates %>% 
+  mutate(NR_IDADE_DATA_POSSE = case_when(NR_IDADE_DATA_POSSE == 999 ~ NA_real_,
+                                         T ~ NR_IDADE_DATA_POSSE)) %>% 
+  group_by(DS_GENERO, NR_IDADE_DATA_POSSE) %>% 
+  summarize(mean_percentage_votes = mean(percentage_of_votes, na.rm = T))
+  
+candidates_mean_votes_by_age_gender %>% ggplot() +
+  geom_line(aes(x = NR_IDADE_DATA_POSSE, y = mean_percentage_votes, 
+                group = DS_GENERO, colour = DS_GENERO)) +
+  ggtitle("Mean Percentage of Votes by Age and gender") +
+  xlab("Age") + ylab("Mean Percentage of Votes") + theme_light()
+```
+
+#### 13.e - Age in which feminine and masculine candidates have greatest percetage of votes
+```{r}
+men_age_most_votes <- candidates_mean_votes_by_age_gender %>% group_by(DS_GENERO) %>% 
+  arrange(DS_GENERO, -mean_percentage_votes) %>% top_n(1, mean_percentage_votes) %>% 
+  filter(DS_GENERO == "MASCULINO") %>% pull(NR_IDADE_DATA_POSSE)
+
+women_age_most_votes <- candidates_mean_votes_by_age_gender %>% group_by(DS_GENERO) %>% 
+  arrange(DS_GENERO, -mean_percentage_votes) %>% top_n(1, mean_percentage_votes) %>% 
+  filter(DS_GENERO == "FEMININO") %>% pull(NR_IDADE_DATA_POSSE)
+
+```
+
+The age in which feminine and masculine candidates have greatest percentage of votes are respectively `r women_age_most_votes` and `r men_age_most_votes`.
+
+#### 14.a - Total Party votes in each municipality and percentage of Party votes in each municipality
+```{r}
+results_agg_parties <- results_agg_candidates %>% group_by(NM_UE,SG_PARTIDO) %>% 
+  summarize(total_party_votes = sum(QT_VOTOS_NOMINAIS, na.rm = T)) %>% 
+  group_by(NM_UE) %>% 
+  mutate(percentage_of_votes = 
+           100*total_party_votes/sum(total_party_votes, na.rm= T)) %>% ungroup()
+
+results_agg_parties %>% slice(1:10)
+```
+
+
+#### 14.b - Table IDH
+```{r}
+IDH <- tibble(NM_UE=c("ALTO ALEGRE", "AMAJARI", "BOAVISTA", "BONFIM",
+                      "CANTÁ", "CARACARAÍ", "CAROEBE", "IRACEMA", "MUCAJAÍ", 
+                      "NORMANDIA", "PACARAIMA", "RORAINOPOLIS", 
+                      "SÃO JOÃO DA BALIZA", "SÃO LUIZ", "UIRAMUTÃ"),
+       IDH=c(0.542, 0.484, 0.752, 0.626, 0.619, 0.624, 0.639, 0.582, 0.665, 
+             0.594, 0.650, 0.619, 0.655, 0.649, 0.453))
+
+IDH
+```
+
+#### 14.c - Using anti_join() to check if a common and complete identifier exists between databases and adjusting for errors so that all obervations are crossed.
+```{r}
+not_crossed <- results_agg_parties %>% anti_join(IDH, by = "NM_UE") %>% distinct(NM_UE)
+```
+Common identifier is NM_UE, but `r not_crossed %>% slice(1)` and `r not_crossed %>% slice(2)` are not crossed, so I adapt the IDH database to correct for the identifier.
+
+```{r}
+not_crossed1 <- as.character(slice_head(not_crossed))
+not_crossed2 <- as.character(slice_tail(not_crossed))
+
+IDH <- IDH %>% mutate(NM_UE = case_when(NM_UE == "BOAVISTA" ~ not_crossed1,
+                                        NM_UE == "RORAINOPOLIS" ~ not_crossed2,
+                                        T ~ NM_UE))
+```
+
+#### 14.d - Use left_join() to merge databases.
+```{r}
+results_agg_parties_IDH <- results_agg_parties %>% left_join(IDH, by = "NM_UE")
+
+results_agg_parties_IDH %>% slice(1:10)
+```
+
+#### 14.e - Point plot of municipality HDI by percentage of votes in the PMD Party.
+```{r}
+results_agg_parties_IDH %>% filter(SG_PARTIDO == "PMDB") %>% ggplot() +
+  geom_point(aes(x = IDH, y = percentage_of_votes)) + theme_light() +
+  ggtitle("Municipality HDI and percentage of votes in PMDB") +
+  xlab("HDI") + ylab("Percentage of Votes in PMDB")
+```
+
+#### 14.f - Point plot of municipality HDI by percentage of votes in the PMD Party with points size scaled to total votes in PMDB in the municipality.
+```{r}
+results_agg_parties_IDH %>% filter(SG_PARTIDO == "PMDB") %>% ggplot() +
+  geom_point(aes(x = IDH, y = percentage_of_votes, size = total_party_votes)) + theme_light() +
+  ggtitle("Municipality HDI and percentage of votes in PMDB") +
+  xlab("HDI") + ylab("Percentage of Votes in PMDB")
+```
+
+#### 14.g - Point plot of municipality HDI by percentage of votes in the PMD Party with points color scaled to total votes in PMDB in the municipality.
+```{r}
+results_agg_parties_IDH %>% filter(SG_PARTIDO == "PMDB") %>% ggplot() +
+  geom_point(aes(x = IDH, y = percentage_of_votes, colour = total_party_votes)) + 
+  scale_color_gradient(low = "#a2ceeb", high = "#032b45")+ 
+  theme_light() +
+  ggtitle("Municipality HDI and percentage of votes in PMDB") +
+  xlab("HDI") + ylab("Percentage of Votes in PMDB")
+```
+

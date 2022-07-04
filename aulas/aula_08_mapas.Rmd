@@ -1,0 +1,84 @@
+---
+title: "aula_08_mapas"
+author: "Amanda Freitas"
+date: '2022-06-10'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#install.packages("sf")
+#install.packages("lwgeom")
+#install.packages("rgdal")
+
+library("tidyverse")
+library("tidylog")
+library("nycflights13")
+library("sf")
+library("lwgeom")
+library("rgdal")
+
+```
+
+No tibble airports as colunas lat e lon são coordenadas dos aeroportos.
+
+O sf traz mais poder para os nossos tibbles, permitindo eles entenderem dados espaciais. Usando a função st_as_sf(). O argumento coords= aceita um vetor com os nomes das duas colunas, longitude e latitude (nesta ordem, pois longitude é o eixo X e latitude é o eixo Y - se pensarmos nas coordenadas como pontos cartesianos).
+
+Há uma nova coluna também, geometry. Ela codifica os dados de longitude e latitude num formato mais complexo que facilita operações e visualizações espaciais.
+
+A nossa gramática de gráficos ggplot() facilita a visualização de dados espaciais no formato bem conhecido, com uma geometria específica: geom_sf()
+
+Sistemas de coordenadas - Saber o CRS dos nossos dados brutos é o primeiro passo. Provável que devemos usar o sistema “WGS84”. Para verificar outros atalhos para sistemas de coordenados, pode aproveitar do site http://epsg.io/. Usar o argumento de CRS.
+
+```{r}
+
+airports_test <- airports %>% st_as_sf(coords=c("lon","lat"), 
+                                  crs=4326)
+
+airports_test
+
+class(airports_test)
+
+airports_test %>% ggplot() +
+  geom_sf()
+
+```
+
+Quando chamamos geom_sf, ele usa o CRS definido em nosso tibble. Mas em qualquer momento podemos transformar o CRS atual para um alternativo, por exemplo um CRS que melhor representa um lugar específico no mundo. Usamos st_transform() em nosso pipe de trabalho para alterar o CRS, especificando o novo número da projeção desejada.
+
+```{r}
+airports %>% st_transform(3857) %>%
+  ggplot() +
+  geom_sf()
+
+airports %>% st_transform(3751) %>%
+  ggplot() +
+  geom_sf()
+
+```
+
+
+# Exercício 1
+Crie um objeto de simple features (sf) com os seguintes dados. Os valores de longitude e latitude são brutos em CRS 4326
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
