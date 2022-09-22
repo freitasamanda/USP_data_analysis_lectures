@@ -1,0 +1,160 @@
+---
+title: "Untitled"
+output: html_document
+date: "2022-09-14"
+---
+
+```{r}
+library(tidyverse)
+library(tidylog)
+library(ggplot2)
+library(readr)
+library(stargazer)
+```
+
+g)	Usando um software, use a matriz X para calcular X’X.
+```{r}
+X <- 
+  matrix(
+    c(1, 2, -1, 0, 1, 3),
+    nrow = 3,
+    ncol = 2
+  )
+print(X)
+```
+
+```{r}
+X2 <- 
+  matrix(
+    c(1, 0, 2, 1, -1, 3),
+    nrow = 2,
+    ncol = 3
+  )
+print(X2)
+```
+
+
+```{r}
+Y <- matrix(
+  c(1,3,2),
+  nrow = 3,
+  ncol = 1
+)
+print(Y)
+```
+
+
+Defina A = X’X. Encontre a inversa de A, ou seja, A^(-1).
+```{r}
+# usando um software calcule X2 * X
+A = X2 %*% X
+print(A)
+```
+
+
+```{r}
+Ainversa <- solve(A)
+print(Ainversa)
+```
+
+
+Considere B como a matriz equivalente a X’Y. Determine B.
+```{r}
+B <- X2 %*% Y
+print(B)
+```
+
+Chame β a matriz que é equivalente ao produto A^(-1) B. Encontre β. Interprete os valores obtidos ali
+```{r}
+Beta <-  Ainversa %*% B
+print(Beta)
+```
+
+
+Importando dados do exerícios
+```{r}
+dados <- read_delim("dados.csv", delim = ";")
+print(dados)
+
+dados <- dados %>% rename("estado" = estadp)
+
+```
+```{r}
+dados <- 
+  dados %>% 
+  mutate(funcionarios_porcentagem = funcionarios_porcentagem/100)
+```
+
+
+```{r}
+dados %>% 
+  ggplot() +
+  geom_point(aes(
+    x = renda, y = funcionarios_porcentagem
+  )) +
+  ggtitle("Relação entre % de funcionários públicos e renda do estado") +
+  xlab("renda per capita do município") +
+  ylab("porcentagem de funcionários públicos")
+```
+
+b)	Agora considere que queremos representar a porcentagem de funcionários públicos (g) como uma função linear da renda per capita (i). Reescreva os dados indicados na tabela acima como um sistema de equações. 
+```{r}
+funcionarios <- dados$funcionarios_porcentagem
+
+renda <- dados$` renda `
+renda <- renda/100
+```
+
+c)	Transforme o sistema acima em termos matriciais. Por favor, construa tantas matrizes quantas forem necessárias de tal forma que esteja expresso o sistema em termos matriciais. Especifique as dimensões de todas as matrizes. 
+```{r}
+matriz_funcionarios <- 
+  matrix(funcionarios,
+         ncol = 1)
+
+B <- matrix(c("a","b"),
+           ncol = 1,
+           nrow = 2)
+
+renda1 <- c(renda)
+vetor_de_um <- c(1,1,1,1,1,1,1)
+
+matriz_renda <- 
+  cbind(vetor_de_um, renda1)
+
+matriz_renda %*% B
+
+```
+
+REGRESSAO
+
+```{r}
+regressao <- 
+  dados %>% 
+  lm(funcionarios ~ renda, dados=.) 
+
+summary(regressao) 
+```
+
+```{r}
+residuos <- regressao$residuals
+residuos
+```
+
+```{r}
+#find sse - Sum of Squares Error (SSE)
+sse <- sum((fitted(regressao) - dados$funcionarios_porcentagem)^2)
+sse
+
+#find ssr Sum of Squares Regression (SSR)
+ssr <- sum((fitted(regressao) - mean(dados$funcionarios_porcentagem))^2)
+ssr
+
+#find sst Sum of Squares Total (SST)
+sst <- ssr + sse
+sst
+
+#We can verify that SST = SSR + SSE:
+ssr + sse == sst
+```
+
+
