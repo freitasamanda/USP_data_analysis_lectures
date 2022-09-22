@@ -71,7 +71,6 @@ As diferenças vêm da introdução de duas variáveis controle novas. É possí
 
 Considere a situação em que os valores dos coeficientes tenham mudado entre os modelos 1 e 2.
 
-7) Proponha um teste de hipóteses para a avaliar se há diferença estatística relevante entre os coeficientes obtidos dos modelos.
 
 É possível fazer um teste de hipóteses com intervalo de confiança. Tendo que X1 tem como coeficiente 
 
