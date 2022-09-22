@@ -1,0 +1,88 @@
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(tidyverse)
+library(tidylog)
+library(stargazer)
+library(readxl)
+library(broom)
+```
+
+Considere que esta base indica uma variável dependente (Y), uma explicativa (X1) e dois controles (C1 e C2). 
+
+```{r echo=TRUE}
+base <- read_excel("lab_02_base.xlsx")
+head(base)
+```
+
+1) Rode um modelo bivariado Y = f (X1). Escreva a equação estimada;
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE}
+modelo01 <- 
+  base %>% 
+  lm(Y ~ X1, data = .)
+
+tidy(modelo01)
+```
+```{r, results='asis'}
+modelo01 %>% 
+   stargazer(type="html")
+```
+
+
+
+  2) Interprete os resultados, tanto em termos dos valores dos coeficientes, como em termos da significância estatística;
+
+O modelo tem um beta de 3,4 com desvio padrão de 0,3, um alfa/beta 0 de -56,8, com um p-valor menor que 0,05, portanto tem significância estatística, isto é, podemos rejeitar a hipótese nula. O R2 ajustado de 0,38 significa que a variável X1 explica 38% da variação de Y. 
+
+    
+  3) Rode um modelo multivariado Y = f (X1, C1, C2). Escreva a nova equação estimada;
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE}
+modelo02 <- 
+  base %>% 
+  lm(Y ~ X1 + C1, data = .)
+
+tidy(modelo02)
+```
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE}
+modelo03 <- 
+  base %>% 
+  lm(Y ~ X1 + C1 + C2, data = .)
+
+tidy(modelo03)
+```
+
+```{r, results='asis'}
+stargazer(modelo01, modelo02, modelo03, 
+          type = "html",
+          digits =  2)
+```
+
+
+
+  5) Compare os valores obtidos em cada um dos modelos do coeficiente de X1 e da constante. Comente;   
+
+Adicionando as duas variáveis de controle, o coeficiente de X1 foi de 3,4 para 4,15. O r2 ajustado passou para 0,43.
+
+  6) Se esses números forem diferentes entre si, a que você atribui a mudança entre os modelos?
+  
+As diferenças vêm da introdução de duas variáveis controle novas. É possível ver que a cada introdução de uma nova variável de controle, o poder de explicação do modelo muda. 
+
+Considere a situação em que os valores dos coeficientes tenham mudado entre os modelos 1 e 2.
+
+7) Proponha um teste de hipóteses para a avaliar se há diferença estatística relevante entre os coeficientes obtidos dos modelos.
+
+É possível fazer um teste de hipóteses com intervalo de confiança. Tendo que X1 tem como coeficiente 
+
+    
+8) Faça o teste e reporte os resultados. Qual sua conclusão?
+
+
+
+Por fim, faça este exercício se tiver tempo:
+    
+9) Avalie a sua base de dados à procura de outliers. Caso haja, rode o modelo multivariado apresentado acima e compare os resultados.
+
+
+
