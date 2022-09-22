@@ -60,7 +60,6 @@ stargazer(modelo01, modelo02, modelo03,
 ```
 
 
-
   5) Compare os valores obtidos em cada um dos modelos do coeficiente de X1 e da constante. Comente;   
 
 Adicionando as duas variáveis de controle, o coeficiente de X1 foi de 3,4 para 4,15. O r2 ajustado passou para 0,43.
@@ -70,11 +69,58 @@ Adicionando as duas variáveis de controle, o coeficiente de X1 foi de 3,4 para 
 As diferenças vêm da introdução de duas variáveis controle novas. É possível ver que a cada introdução de uma nova variável de controle, o poder de explicação do modelo muda. 
 
 Considere a situação em que os valores dos coeficientes tenham mudado entre os modelos 1 e 2.
-É possível fazer um teste de hipóteses com intervalo de confiança. Tendo que X1 tem como coeficiente 
-
+É possível fazer um teste de hipóteses com intervalo de confiança. 
     
 8) Faça o teste e reporte os resultados. Qual sua conclusão?
 
+```{r message=FALSE, warning=FALSE, include=FALSE}
+n <- 200
+
+#pegando o estimate e o std.error do modelo1
+modelo01_tidy <- modelo01 %>% tidy()
+
+x1_estimate <- modelo01_tidy$estimate
+x1_estimate <- x1_estimate[2:2]
+
+x1_std_error <- modelo01_tidy$std.error
+x1_std_error <- x1_std_error[2:2]
+
+#pegando o estimate e o std.error do modelo2
+modelo03_tidy <- modelo03 %>% tidy()
+
+x1_estimate_03 <- modelo03_tidy$estimate
+x1_estimate_03 <- x1_estimate_03[2:2]
+
+x1_std_error_03 <- modelo03_tidy$std.error
+x1_std_error_03 <- x1_std_error_03[2:2]
+  
+#IC
+#IC do modelo 1
+error_modelo1 <- qnorm(0.975)*x1_std_error/sqrt(n)
+left_modelo1 <- x1_estimate-error_modelo1
+right_modelo1 <- x1_estimate+error_modelo1
+left_modelo1
+right_modelo1
+
+#IC do modelo 3
+error_modelo3 <- qnorm(0.975)*x1_std_error_03/sqrt(n)
+left_modelo3 <- x1_estimate_03-error_modelo3
+right_modelo3 <- x1_estimate_03+error_modelo3
+left_modelo3
+right_modelo3
+
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+tibble(model = c("x1_model1", "x1_model3"),
+       estimate = c(x1_estimate, x1_estimate_03),
+       std.error = c(x1_std_error, x1_std_error_03),
+       left_IC = c(left_modelo1, left_modelo3),
+       right_IC = c(right_modelo1, right_modelo3)
+       )
+```
+
+Os valores dos dois coeficientes não estão contidos nos intervalos de confiança, portanto podemos afirmar com 95% de certeza que os coeficientes de X1 no modelo sem variáveis de controle e no modelo com duas variáveis de controle são diferentes.
 
 
 Por fim, faça este exercício se tiver tempo:
