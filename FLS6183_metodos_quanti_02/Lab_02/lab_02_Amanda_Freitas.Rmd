@@ -120,6 +120,14 @@ tibble(model = c("x1_model1", "x1_model3"),
        )
 ```
 
+Outra forma de fazer confidence interval é com o comando confint:
+
+```{r}
+confint(modelo01)
+confint(modelo02)
+confint(modelo03)
+```
+
 Os valores dos dois coeficientes não estão contidos nos intervalos de confiança, portanto podemos afirmar com 95% de certeza que os coeficientes de X1 no modelo sem variáveis de controle e no modelo com duas variáveis de controle são diferentes.
 
 
