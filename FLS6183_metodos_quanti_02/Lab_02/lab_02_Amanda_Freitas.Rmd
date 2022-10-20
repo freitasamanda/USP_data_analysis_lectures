@@ -21,12 +21,13 @@ modelo01 <-
   lm(Y ~ X1, data = .)
 
 tidy(modelo01)
+
+summary(modelo01)
 ```
 ```{r, results='asis'}
 modelo01 %>% 
    stargazer(type="html")
 ```
-
 
 
   2) Interprete os resultados, tanto em termos dos valores dos coeficientes, como em termos da significância estatística;

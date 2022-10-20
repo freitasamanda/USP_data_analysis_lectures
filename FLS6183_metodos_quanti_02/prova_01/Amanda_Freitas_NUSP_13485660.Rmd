@@ -1,0 +1,89 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+# Proval Parcial 1 -  23/10/2022
+## Amanda Freitas Carnaiba - NUSP 13485660
+### Parte 2 - Pós-graduação
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(tidyverse)
+library(readr)
+library(broom)
+library(tidylog)
+library(stargazer)
+library(lmtest)
+library(olsrr)
+library(corrplot)
+```
+
+Para responder esta parte, deve-se tomar o banco de dados que está junto com este arquivo de enunciado para a prova (Base_prova_parte2.csv). 
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE}
+base <- read.csv("base_prova_parte2.csv")
+```
+
+A variável dependente é votos e as demais colunas são todas variáveis explicativas.
+
+Deve-se selecionar uma amostra aleatória de tamanho igual a 500 para esse exercício. Isto deve ser feito utilizando dois comandos no R: set.seed() e o sample_n().
+
+Para o primeiro comando, deve-se novamente utilizar o número USP como o seed. Para um número USP como o do exemplo anterior, deve-se digitar no início do código: set.seed(12345678) e em seguida sample_n(500).
+
+```{r echo=TRUE, message=TRUE}
+set.seed(13485660)
+base_nova <- 
+  base %>% 
+  sample_n(500)
+
+base_nova %>% 
+  write.csv("base_nova.csv")
+
+
+dim(base_nova)
+
+head(base_nova)
+```
+
+
+De posse deste novo banco de dados, deve-se buscar encontrar um modelo de bom ajuste para a previsão dos votos. O livro de código das variáveis está resumido a seguir:
+
+- Votos: Votação total recebida por um candidato a deputado federal na eleição no ano t.
+- financ: Valor (em milhares) declarado pelo candidato da arrecadação da campanha,
+- idade: Idade do candidato (em anos) no dia 31/07 do ano t.
+- Fpart: Proporção dos recursos de campanha do candidato recebida do partido.
+- Votos_t1: Votação total recebida por um candidato a deputado federal na eleição no ano t-1.
+
+Em sua resposta, você deve apresentar o modelo de MQO que melhor se adéqua aos dados selecionados. Se for necessário, considere a situação de apresentar mais de um modelo. Apresente também gráficos e estatísticas descritivas das variáveis que contribuam na sua decisão sobre qual o melhor modelo. Teste para a validade das hipóteses do modelo de MQO e mostre os resultados obtidos. Apresente ao final as primeiras 25 linhas do seu banco de dados também.
+
+
+### Estatísticas descritivas
+
+VD = Votos recebidos para deputado federal
+
+financimento -> voto
+
+Hipótese: quanto maior o financiamento, maior o número de votos recebidos.
+
+idade -> voto
+
+Hipótese: candidatos mais velhos recebem mais votos.
+
+recursos recebidos do partido: quanto mais recursos recebidos, mais votos
+
+votos recebidos anteriormente -> mais votos nessa eleição
+
+
+```{r}
+summary
+
+plot(base_nova)
+
+
+base_nova %>% 
+  lm(votos ~ idade, data = .) %>% 
+  summary()
+
+
+```
+
