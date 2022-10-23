@@ -1,0 +1,482 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(tidyverse)
+library(readr)
+library(broom)
+library(tidylog)
+library(stargazer)
+library(lmtest)
+library(olsrr)
+library(corrplot)
+library(ggplot2)
+library(knitr)
+library(tidyr)
+library(data.table)
+```
+
+# Proval Parcial 1 -  23/10/2022
+## Amanda Freitas Carnaiba - NUSP 13485660
+
+### Parte 1
+
+Considere a seguinte tabela com os resultados de quatro modelos distintos de regressão. A variável dependente é uma variável Y não especificada aqui.
+
+![Tabela 1 – Resultados da Regressão – Variável Dependente: Y](images/tabela_01.png)
+Note que a tabela está preenchida com letras em alguns lugares ao invés de algarismos. Para converter estas letras em números, é preciso tomar o seu número USP e proceder da forma a seguir (aqueles que não possuem número USP podem usar o RG):
+
+Considere o seguinte número USP: 12345678
+
+Associamos para cada letra um dos numerais em ordem: a = 1; b = 2; c = 3; e assim sucessivamente até h = 8. Nos termos da tabela em que constam as letras, você deve substituir pelo algarismo correspondente. Como exemplo, para a expressão da primeira linha do modelo 2 [a, (b+1)2], o termo deve ser substituído por: 1,(2+1)2 = 1,32. 
+
+0) Assim, antes de iniciar, você deve reescrever a tabela acima com todos os algarismos completados. Note que é preciso utilizar 8 algarismos em 6 valores diferentes.
+
+![Tabela 2 – Resultados da Regressão – Variável Dependente: Y - NUSP 13485660](images/tabela_02.png)
+
+A partir do que é apresentado nesta tabela, responda às questões a seguir:
+
+01) Escreva a equação que representa o único modelo bivariado estimado. Interprete-a:
+
+$$Y = 2.10 + (1.30 \times X_{1}) + \varepsilon$$
+
+*Neste modelo, quando X1 é igual a 0, Y é igual a 2.10. A cada aumento de 1 unidade na variável independente X1, a variável dependente Y aumenta em 1.30 unidades.*
+
+
+
+02) O que significam os asteriscos ao lado do termo em parênteses? Apresente o teste de hipóteses que justifica esta indicação. Interprete o resultado obtido para o coeficiente estimado de X1 para o primeiro modelo;
+
+*Os asteriscos dizem respeito à significância estatística. No primeiro modelo, com um erro padrão de 0.02, temos um p-valor menor que 0.01%. Isto significa que podemos rejeitar a hipótese nula de que X1 não está associada à variável dependente Y.*
+
+*Podemos realizar um teste de hipótese para confirmar isso, em que:*
+
+$$H_{0}: \beta _{X1}=0$$
+$$H_{1}: \beta _{X1}\neq0$$
+
+Tendo que $\beta _{X1} = 1.30$ e $se(\beta _{X1})= 0.02$, podemos calcular o intervalo de confiança à 99,7% de significância estatística:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+beta_x1 <- 1.30
+sd_x1 <- 0.02
+
+tibble(x1 = beta_x1,
+       sd_x1 = sd_x1,
+       IC_lower = beta_x1-(3*sd_x1),
+       IC_upper = beta_x1+(3*sd_x1)) %>% 
+  kable(col.names = c("Parâmetro de X1", "Desvio Padrão de X1", "IC (99,7%)", ""))
+```
+
+*Como 0 não está contido no Intervalo de Confiança, podemos rejeitar a hipótese nula de que $\beta _{X1}=0$.*
+
+
+3) Explique também o que significam os termos apresentados em parênteses em toda a tabela. Explique em que situação se deve apresentar os valores calculados desta forma;
+
+*Os termos em parênteses ao longo de toda tabela são os erros-padrão dos termos de cada variável independente X, com os asteriscos indicando a significância estatística a partir do p-valor. Por exemplo, vemos que, no terceiro modelo, nenhuma variável independente X tem significância estatística, isto é, o p-valor de todas elas está acima de 5%, o que nos leva a não rejeitar a hipótese nula de que seus parâmetros são iguais a 0, consequentemente concluindo que essas variáveis não explicam a variação na variável dependente Y. Além disso, é importante apresentar os erros-padrão para o cálculo do intervalo de confiança dos termos estimados.*
+
+
+
+4) Corrija o nível de significância do parâmetro estimado para o termo da constante do primeiro modelo, mostrando como chegou ao resultado;
+
+*O termo da constante do primeiro modelo não possui significância estatística, como podemos comprovar por meio de um teste de hipóteses usando o Intervalo de Confiança:*
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+alfa_modelo1 <- 2.10
+sd_alfa_modelo1 <- 4.85
+
+
+tibble(alfa_modelo1 = alfa_modelo1,
+       sd_alfa_modelo1 = sd_alfa_modelo1,
+       IC_lower99 = alfa_modelo1 - (3* sd_alfa_modelo1),
+       IC_upper99 = alfa_modelo1 + (3* sd_alfa_modelo1),
+       IC_lower95 = alfa_modelo1 - (2* sd_alfa_modelo1),
+       IC_upper95 = alfa_modelo1 + (2* sd_alfa_modelo1),
+       IC_lower68 = alfa_modelo1 - (1* sd_alfa_modelo1),
+       IC_upper68 = alfa_modelo1 + (1* sd_alfa_modelo1)) %>% 
+  kable(col.names = c("Constante", "Desvio Padrão", "IC (99,7%)", "", "IC (95%)", "", "IC (68%)", ""))
+```
+
+
+*Como o valor 0 está contido em todos os intervalos, podemos concluir que a constante não possuí nível de significância estatística.*
+
+
+
+5) Escreva a equação para o 2º modelo apresentado. Interprete cada um dos parâmetros estimados;
+
+$$Y = 1.54+(1.42\times X_{1})+(-4.12\times  X_{2})+\varepsilon$$
+
+*Neste modelo, quando X1 e X2 são iguais a 0, Y é igual a 1.54. Com o aumento de uma unidade em X1, controlado por X2, isto é, mantendo X2 constante, a variável Y aumenta 1.42 unidades. Já quando ocorre o aumento de uma unidade em X2 controlando por X1, isto é, mantendo X1 constante, ocorre a diminuição de 4.12 unidades em Y.*
+
+
+
+6) Como é possível comparar este resultado com o obtido no primeiro modelo? Apresente um teste que permita dizer se o novo parâmetro se alterou em relação ao primeiro modelo. Discuta;
+
+*Podemos testar a hipótese de que o parâmetro de X1 mudou com a introdução de X2 a partir do intervalo de confiança. No modelo 1, temos um resultado $\beta _{X1} = 1.30$ e $se(\beta _{X1})= 0.02$. Já no modelo 2, temos mudança nos parâmetros de X1: $\beta _{X1} = 1.42$ e $se(\beta _{X1})= 0.01$. Com isso temos o seguinte intervalo de confiança, para 95% de significância estatística:*
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+beta_x1 <- 1.30
+sd_x1 <- 0.02
+IC_lower_1 <- beta_x1 - (2* sd_x1)
+IC_upper_1 <- beta_x1 + (2* sd_x1)
+
+beta_02_x1 <- 1.42
+sd_02_x1 <- 0.01
+IC_lower_2 <- beta_02_x1 - (2* sd_02_x1)
+IC_upper_2 <- beta_02_x1 + (2* sd_02_x1)
+
+tibble(x1 = c(beta_x1, beta_02_x1),
+       sd_x1 = c(sd_x1, sd_02_x1),
+         IC_lower = c(IC_lower_1, IC_lower_2),
+       IC_upper = c(IC_upper_1, IC_upper_2)) %>% 
+  kable(col.names = c("Parâmetro de X1", "Desvio Padrão de X1", "IC (95%)", ""))
+
+```
+
+*Com isso, é possível verificar que o valor do parâmetro realmente se alterou do modelo 1 para o modelo 2, pois os valores, considerando o intervalo de confiança, não se interceptam.*
+
+
+
+7) O que significa o termo R2? Interprete o valor encontrado para o segundo modelo;
+
+*O termo R2 indica a fração de variação da variável dependente Y que é explicado pelas variáveis independentes do modelo. Está sempre entre 0 e 1, isto é, entre 0% e 100%, e esperamos que introduzir novas variáveis explicativas aumentem o valor de R2, isto é, a fração de variação da variável dependente que queremos que nosso modelo seja capaz de explicar. Com a introdução de X2 no segundo modelo, o R2 passa de 31% para 35%, o que significa que as variáveis X1 e X2 explicam 35% da variação da variável dependente Y.* 
+
+
+
+No 3º modelo indicado na tabela, há dois problemas. O primeiro é uma violação clássica de uma das hipóteses do modelo de MQO; o segundo parece ser um erro de digitação a respeito da significância de um dos parâmetros estimados. 
+
+8) Explique qual é a violação mencionada e quais são as evidências que suportam a sua interpretação. Quais são os impactos desta violação na interpretação dos resultados?
+
+*No terceiro modelo, temos uma alteração importante no coeficiente de X2: no segundo modelo, tínhamos $\beta _{X2} = -4.12$ e $se(\beta _{X2})= 1.90$, com significância estatística ao nível de 95%. Já com a introdução da variável X3, o parâmetro de X2 mudou de sinal e o erro-padrão também aumento, sendo que agora temos $\beta _{X2} = 6,60$ e $se(\beta _{X2})= 6,70$. Isso indica que pode haver problema de multicolinearidade com as variáveis independentes, o que viola as hipóteses necessárias para o modelo MQO. Um R2 muito alto, porém sem significância estatística no modelo, pode ser indicativo de multicolinearidade, assim como um erro-padrão muito alto. Se X2 e X3 são altamente correlacionadas, é praticamente impossível fazer apontamentos sobre de que forma cada uma dessas variáveis está relacionada à variável Y. Além disso, a baixa significância estatística nos levaria a conclusões de que nenhuma dessas variáveis explicam a variável dependente Y, quando na verdade elas explicam. Podemos identificar a multicolinearidade usando o fator de inflação da variância (VIF), ou uma matriz de correlação entre as variáveis. Caso seja detectada a multicolinearidade, a solução é remover uma dessas duas variáveis do modelo.*
+
+
+
+9) Como podemos identificar este erro de digitação? Discuta.
+
+*No terceiro modelo, o valor da Constante é -3.29, com um erro-padrão de 2.81. A tabela indica que há significância estatística a 95% para esta estimativa, porém há um claro erro de digitação: utilizando intervalo de confiança, à 95% de significância estatística temos que o valor do termo Constante desse modelo está entre -8.91 e 2.33. Dado que o valor 0 está contido nesse intervalo, não podemos rejeitar a hipótese nula de que não há relação com a variável Y, isto é, de que o valor da Constante pode ser igual a 0, portanto não há significância estatística e não deveria haver um asterisco ao lado deste valor.*
+
+
+
+10) Quais efeitos produzem a introdução de uma nova variável explicativa em um modelo de regressão? Discuta utilizando os resultados obtidos no 4º modelo em comparação com os demais.
+
+*No quarto modelo, a variável X3 foi removida, provavelmente por causar problemas de multicolinearidade, e houve a introdução da variável X4. Em relação ao modelo 2, houve um aumento no valor de R2, que passou de 35% para 41%, o que significa que o modelo 4 tem a capacidade de explicar 41% da variação da variável dependente Y. Todas as variáveis no quarto modelo são estatisticamente significantes ao nível de 99,9%, o que é outro indicativo de que este é um bom modelo. Para melhorar este modelo, poderia ser introduzidas mais variáveis independentes que aumentassem o valor de R2 para algum valor acima de 50%, porém sem perder a significância estatística das demais variáveis. Em termos de interpretação dos coeficientes, um modelo multivariado indica unidades de variação numa variável dependente que são causadas por variação em uma variável independente, controlada pelas demais. Isto é, por exemplo, a variação de uma unidade em X4 causa a variação de 2,45 unidades em Y, controlada pelas variáveis X1 e X2, isto é, pressupondo que as variáveis X1 e X2 não variam. No entanto, a introdução de novas variáveis num modelo deve seguir critérios: incluir variáveis de controle irrelevantes afeta a qualidade da inferência. De acordo com  Neumayer e Plümper (2017, p.123), a melhor forma de proceder não é tentar construir modelos que deem conta de toda variação de Y, mas construir modelos que tenham bom desempenho em testes de robustez, por exemplo rodando testes que investiguem variáveis omitidas que podem estar correlacionadas às variáveis de interesse.* 
+
+
+
+
+----
+
+### Parte 2 - Pós-graduação
+
+
+Para responder esta parte, deve-se tomar o banco de dados que está junto com este arquivo de enunciado para a prova (Base_prova_parte2.csv). 
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=TRUE}
+base <- read.csv("base_prova_parte2.csv")
+```
+
+A variável dependente é votos e as demais colunas são todas variáveis explicativas.
+
+Deve-se selecionar uma amostra aleatória de tamanho igual a 500 para esse exercício. Isto deve ser feito utilizando dois comandos no R: set.seed() e o sample_n().
+
+Para o primeiro comando, deve-se novamente utilizar o número USP como o seed. Para um número USP como o do exemplo anterior, deve-se digitar no início do código: set.seed(12345678) e em seguida sample_n(500).
+
+```{r echo=TRUE, message=TRUE, paged.print=TRUE}
+set.seed(13485660)
+
+base_nova <- 
+  base %>% 
+  sample_n(500)
+
+dim(base_nova)
+
+base_nova %>% 
+  slice(1:10) %>% 
+  kable(digits = 3, caption = "base gerada com o comando set.seed utilizando NUSP 13485660")
+```
+
+
+De posse deste novo banco de dados, deve-se buscar encontrar um modelo de bom ajuste para a previsão dos votos. O livro de código das variáveis está resumido a seguir:
+
+- Votos: Votação total recebida por um candidato a deputado federal na eleição no ano t.
+- financ: Valor (em milhares) declarado pelo candidato da arrecadação da campanha,
+- idade: Idade do candidato (em anos) no dia 31/07 do ano t.
+- Fpart: Proporção dos recursos de campanha do candidato recebida do partido.
+- Votos_t1: Votação total recebida por um candidato a deputado federal na eleição no ano t-1.
+
+Em sua resposta, você deve apresentar o modelo de MQO que melhor se adéqua aos dados selecionados. Se for necessário, considere a situação de apresentar mais de um modelo. Apresente também gráficos e estatísticas descritivas das variáveis que contribuam na sua decisão sobre qual o melhor modelo. Teste para a validade das hipóteses do modelo de MQO e mostre os resultados obtidos. Apresente ao final as primeiras 25 linhas do seu banco de dados também.
+
+-----
+
+
+### Estabelecendo hipóteses
+
+
+Com a variável dependente sendo Votação total recebida para deputado federal, as primeiras hipóteses que podemos estabelecer dizem respeito a recursos financeiros: é esperado que um maior financiamento de campanha, bem como uma proporção maior de financiamento fornecida ao candidato em relação a outros de seu partido, influenciem num maior número de votos. Portanto podemos estabelecer como primeira hipótese:
+
+> H1: as variáveis financ e Fpart terão coeficiente positivo e estatisticamente significativos. Isto é, candidatos com mais recursos de campanha recebem mais votos.
+
+No entanto, é possível pressupor que pode haver problema de multicolineariedade entre essas duas variáveis, o que será avaliado por meio de testes ao rodar o modelo.
+
+Em relação à idade do candidato, é esperado que candidatos mais velhos recebam mais votos, devido a motivos como um maior tempo de carreira. Portanto podemos estabelecer que:
+
+> H2: a variável idade terá coeficiente positivo e estatisticamente significativo. Isto é, candidatos mais velhos recebem mais votos.
+
+Por fim, podemos pressupor também que candidatos que já receberam um certo número de votos em eleição anterior tenderão a manter um número semelhante na eleição avaliada pelo modelo. Portanto, podemos estabelecer que:
+
+> H3: a variável Votos_t1 terá coeficiente positivo e estatisticamente significativo. Isto é, candidatos que receberam mais votos em eleição anterior recebem mais votos nessa eleição.
+
+### Construindo os modelos
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+#Modelos Bivariados
+
+modelo_financ <- 
+  base_nova %>% 
+  lm(votos ~ financ, data=.)
+
+modelo_idade <- 
+  base_nova %>% 
+  lm(votos ~ idade, data=.)
+
+modelo_t1 <- 
+  base_nova %>% 
+  lm(votos ~ votos_t1, data=.)
+
+modelo_fpart <- 
+  base_nova %>% 
+  lm(votos ~ fpart, data=.)
+
+```
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+#Modelos Multivariados
+
+modelo_idade_financ <- 
+  base_nova %>% 
+  lm(votos ~ financ + idade, data=.)
+
+modelo_idade_financ_t1 <- 
+  base_nova %>% 
+  lm(votos ~ financ + idade + votos_t1, data=.)
+
+modelo_completo <- 
+  base_nova %>% 
+  lm(votos ~ financ + idade + votos_t1 + fpart, data=.)
+```
+
+
+
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+modelo_financ %>% summary()
+
+modelo_idade %>% summary()
+
+modelo_t1 %>% summary()
+
+modelo_fpart %>% summary()
+
+modelo_idade_financ %>% summary()
+
+modelo_idade_financ_t1 %>% summary()
+
+modelo_completo %>% summary()
+```
+
+
+```{r results = "asis"}
+stargazer(modelo_financ, modelo_idade, modelo_t1, modelo_fpart,
+          omit.stat=c("f"),
+          digits = 2,
+          title = "Modelos Bivariados")
+```
+
+```{r results = "asis"}
+stargazer(modelo_idade_financ, modelo_idade_financ_t1, modelo_completo,
+          omit.stat=c("f"),
+          digits = 2,
+          title = "Modelos Multivariados com idade")
+```
+
+
+### Testes de heterocedasticidade e multicolineariedade
+
+Utilizando o teste de Breusch-Pagan e o índice de VIF, podemos testar heterocedasticidade e multicolineariedade nos modelos:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+modelo_financ %>% bptest()
+
+modelo_idade %>% bptest()
+
+modelo_t1 %>% bptest()
+
+modelo_fpart %>% bptest()
+
+modelo_idade_financ %>% bptest()
+
+modelo_idade_financ_t1 %>% bptest()
+
+modelo_completo %>% bptest()
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ols_vif_tol(modelo_completo)
+```
+
+O teste de VIF mostra que não há multicolineariedade entre as variáveis, pois todos os valores estão próximos de 1, porém o teste de Breusch-Pagan, com um p-valor de 0.07, mostra que o modelo é heterocedástico. Podemos verificar avaliando um gráfico de dispersão dos resíduos com a variável explicativa:
+
+
+## Gráficos de dispersão dos resíduos dos modelos com a variável explicativa
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+#salvando os resíduos
+
+#bivariados
+
+residuos_idade <- modelo_idade$residuals
+
+residuos_financ <- modelo_financ$residuals
+
+residuos_votost1 <- modelo_votost1$residuals
+
+residuos_fpart <- modelo_fpart$residuals
+
+
+#multivariados
+
+residuos_idade_financ <- modelo_idade_financ$residuals
+
+residuos_idade_votost1 <- modelo_idade_votost1$residuals
+
+residuos_idade_fpart <- modelo_idade_fpart$residuals
+
+residuos_completo <- modelo_completo$residuals
+
+
+```
+
+
+### Modelos bivariados
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(modelo_idade, aes(residuos_idade, votos)) +
+geom_point(alpha=0.3)+
+stat_smooth(method="lm")+
+  ggtitle("resíduos idade x votos")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(modelo_financ, aes(residuos_financ, votos)) +
+geom_point(alpha=0.3)+
+stat_smooth(method="lm")+
+  ggtitle("resíduos financ x votos")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(modelo_votost1, aes(residuos_votost1, votos)) +
+geom_point(alpha=0.3)+
+stat_smooth(method="lm")+
+  ggtitle("resíduos votos t-1 x votos")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(modelo_fpart, aes(residuos_fpart, votos)) +
+geom_point(alpha=0.3)+
+stat_smooth(method="lm")+
+  ggtitle("resíduos fpart x votos")
+```
+
+
+
+
+### Avaliando distribuição dos dados
+
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+#checking na values
+#colSums(is.na(base_nova))
+#head(base_nova)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(base_nova, aes(idade, votos)) +
+geom_point(alpha = 0.25) +
+  ggtitle("Grafico de dispersao idade x votos") +
+stat_smooth(method = "lm")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(base_nova, aes(financ, votos)) +
+geom_point(alpha = 0.25) +
+  ggtitle("Grafico de dispersao financiamento x votos") +
+stat_smooth(method = "lm")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(base_nova, aes(fpart, votos)) +
+geom_point(alpha = 0.25) +
+  ggtitle("Grafico de dispersao fpart x votos") +
+stat_smooth(method = "lm")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(base_nova, aes(votos_t1, votos)) +
+geom_point(alpha = 0.25) +
+  ggtitle("Grafico de dispersao votos_t1 x votos") +
+stat_smooth(method = "lm")
+```
+
+
+
+# Transformação nos dados
+
+Primeiramente, será realizada uma transformação em votos, votos no ano t-1 e financiamento, realizando divisão em ambas por mil. 
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+base_nova_transf <- 
+  base_nova %>% 
+  mutate(votos_por_mil = votos/1000,
+         financ_por_mil = financ/1000,
+         votos_t1_por_mil = votos_t1/1000)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+
+modelo_financ_por_mil <- 
+  base_nova_transf %>% 
+  lm(votos_por_mil ~ financ_por_mil, data=.)
+
+modelo_financ_por_mil_idade <- 
+  base_nova_transf %>% 
+  lm(votos_por_mil ~ financ_por_mil + idade, data=.)
+
+modelo_completo <- 
+  base_nova_transf %>% 
+  lm(votos_por_mil ~ financ_por_mil + idade + votos_t1, data=.)
+```
+
+```{r results = "asis"}
+stargazer(modelo_financ_por_mil,
+          modelo_financ_por_mil_idade,
+          modelo_financ_por_mil_idade_t1,
+          column.labels = c("financ", "financ + idade", "financ + idade + t1"),
+          omit.stat=c("f"),
+          digits = 2,
+          title = "Modelos Multivariados por mil")
+```
+
+
+
+
+
+
+---------------
+
+## Referências
+Neumayer, Eric and Thomas Plümper. 2017. Robustness Tests for Quantitative Research (Methodological Tools in the Social Sciences). Cambridge; New York: Cambridge University Press.
+
+Kellstedt, Paul M., and Guy D. Whitten. 2015. Fundamentos da Pesquisa em Ciência Política (Lorena Barberia, Gilmar Masiero and Patrick Cunha Silva, Translators). São Paulo, Brazil: Editora Blucher.
