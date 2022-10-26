@@ -1,0 +1,340 @@
+---
+title: "Lab 05"
+output:
+  html_document: default
+  pdf_document: default
+date: "2022-10-26"
+---
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse)
+library(readr)
+library(stargazer)
+library(readxl)
+library(knitr)
+library(kableExtra)
+```
+
+
+Para realizar esta lista de exercícios, considere a base da dados que está no Moodle. Esta é uma base com dados reais, com os resultados das eleições nacionais de 2010 e 2014.
+
+Suponha que uma pesquisadora deseje encontrar a proporção de votos por município para a eleição presidencial de 2010 (variável PT_2010) como preditor da eleição em 2014 (variável PT_2014). Ela acredita que o componente regional é importante para lidar com esses dados.
+
+1)	Utilizando as dummies para cada uma das regiões, se ficar mais simples, encontre a média geral de votos o PT em cada um dos anos e compare com as médias regionais. Comente;
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+base <- read_excel("base_lab_05.xlsx")
+
+base <-
+  base %>% 
+  rename(Centro_Oeste = `Centro Oeste`)
+
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+media_2010 <- mean(base$PT_2010)
+media_2014 <- mean(base$PT_2014)
+```
+
+## 2010
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+media_norte <- 
+  base %>% 
+    filter(Norte == 1) %>% 
+    summarise(media_norte = mean(PT_2010)) %>% 
+  pull(media_norte)
+
+media_nordeste <- 
+  base %>% 
+    filter(Nordeste == 1) %>% 
+    summarise(media_nordeste = mean(PT_2010)) %>% 
+  pull(media_nordeste)
+
+media_Sudeste <- 
+  base %>% 
+    filter(Sudeste == 1) %>% 
+    summarise(media_Sudeste = mean(PT_2010)) %>% 
+  pull(media_Sudeste)
+
+media_Sul <- 
+  base %>% 
+    filter(Sul == 1) %>% 
+    summarise(media_Sul = mean(PT_2010)) %>% 
+   pull(media_Sul)
+
+media_Centro  <- 
+  base %>% 
+    filter(Centro_Oeste == 1) %>% 
+    summarise(media_Centro = mean(PT_2010)) %>% 
+  pull(media_Centro)
+
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tibble(estados = c("Norte", "Nordeste", "Sudeste", "Sul", "Centro_Oeste", "Geral 2010"),
+       medias = c(media_norte, media_nordeste, media_Sudeste, media_Sul, media_Centro, media_2010))
+```
+
+## 2014
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+media_norte_2014 <- 
+  base %>% 
+    filter(Norte == 1) %>% 
+    summarise(media_norte_2014 = mean(PT_2014)) %>% 
+  pull(media_norte_2014)
+
+media_nordeste_2014 <- 
+  base %>% 
+    filter(Nordeste == 1) %>% 
+    summarise(media_nordeste_2014 = mean(PT_2014)) %>% 
+  pull(media_nordeste_2014)
+
+media_Sudeste_2014 <- 
+  base %>% 
+    filter(Sudeste == 1) %>% 
+    summarise(media_Sudeste_2014 = mean(PT_2014)) %>% 
+  pull(media_Sudeste_2014)
+
+media_Sul_2014 <- 
+  base %>% 
+    filter(Sul == 1) %>% 
+    summarise(media_Sul_2014 = mean(PT_2014)) %>% 
+   pull(media_Sul_2014)
+
+media_Centro_2014  <- 
+  base %>% 
+    filter(Centro_Oeste == 1) %>% 
+    summarise(media_Centro_2014 = mean(PT_2014)) %>% 
+  pull(media_Centro_2014)
+
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+tibble(estados = c("Norte", "Nordeste", "Sudeste", "Sul", "Centro_Oeste", "Geral 2010"),
+       medias = c(media_norte_2014, media_nordeste_2014, media_Sudeste_2014, media_Sul_2014, media_Centro_2014, media_2014))
+```
+
+
+A pesquisadora monta um modelo de regressão bivariado.
+
+2)	Apresente os resultados deste modelo. Comente à luz dos dados descritivos obtidos no item anterior;
+
+*VD = PT_2014 e VI = PT_2010*
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+modelo_1 <- 
+  base %>% 
+  lm(PT_2014 ~ PT_2010, data =.)
+
+summary(modelo_1)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results="asis"}
+stargazer(modelo_1, 
+          header = FALSE,
+          digits = 3,
+          type = "html")
+```
+
+Agora adicione as variáveis de dummy de cada uma das regiões em seu modelo de forma a capturar quaisquer discrepâncias regionais.
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+modelo_2_regioes <- 
+  base %>% 
+  lm(PT_2014 ~ PT_2010 + Norte + Nordeste + Norte + Sudeste + Centro_Oeste + Sul, data =.)
+
+summary(modelo_2_regioes)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results="asis"}
+stargazer(modelo_1, modelo_2_regioes,
+          digits = 3,
+          type = "html")
+```
+
+
+3)	O que aconteceu com seu modelo? Comente os motivos que levaram a este resultado.
+
+
+
+------
+
+Uma questão importante a esta altura está na escolha da dummy que se tornará a referência do seu modelo. Esta decisão não muda as conclusões a que você chegará, mas pode facilitar a compreensão do resultado. Uma sugestão é tomar uma das categorias que faça sentido teórico ou aquela com valor destacado – como a de menor ou maior média.
+
+4)	Escolha uma das regiões como referência e rode seu modelo agora sem a variável da votação do PT em 2010. Interprete os resultados.
+
+
+## Sudeste
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+modelo_sem_sudeste <- 
+  base %>% 
+  lm(PT_2014 ~ Norte + Nordeste + Sul + Centro_Oeste, data =.)
+
+summary(modelo_sem_sudeste)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results="asis"}
+stargazer(modelo_sem_sudeste, 
+          digits = 3,
+          type = "html")
+```
+
+## Centro_Oeste
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+modelo_sem_centro <- 
+  base %>% 
+  lm(PT_2014 ~ Norte + Nordeste + Sul + Sudeste, data =.)
+
+summary(modelo_sem_centro)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results="asis"}
+stargazer(modelo_sem_centro,
+          digits = 3,
+          type = "html")
+```
+
+
+5)	Compare os resultados obtidos agora com os dados descritivos obtidos no item 1. Quais semelhanças ou diferenças você encontra?
+
+
+6)	Introduza agora a variável de votação do PT em 2010 e rode novamente seu modelo. O que você observa com relação aos parâmetros estimados das dummies?
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+modelo_04 <- 
+  base %>% 
+  lm(PT_2014 ~ PT_2010 + Norte + Nordeste + Sul + Centro_Oeste, data =.)
+
+summary(modelo_04)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results="asis"}
+stargazer(modelo_sem_sudeste, modelo_sem_centro, modelo_04,
+          digits = 3,
+          type = "html")
+```
+
+7)	Compare o resultado obtido do modelo de regressão com um teste de médias. Quais semelhanças e diferenças encontramos aqui? 
+
+
+------
+
+## Explicação aula
+falácia ecológica = inferindo comportamento do individuo a partir de dados agregados
+individuo por fazer parte de um grupo repete o resultado do grupo?
+Ou seja, não dá para inferir como o eleitor das regiões vota com base em dados agregados (média de votos numa cidade e depois média de voto regional) - olhando um coletivo e inferindo um comportamento individual.
+
+Controle pelo tamanho das cidades, numero de habitantes, porque o dado é de percentual de votos. 
+
+A questão é: a média de votação por cidade em cada região no PT em 2014 explica os votos de alguma forma? 
+
+Teste chi-quadrado com as médias - se a média de cada região for próxima à média geral, significaria que a região não importa. 
+
+Quando roda com todas as dummies, o software omite uma das variáveis dummy: problema de colineariedade perfeita (ele não consegue calcular a inversão da matriz).
+
+Se colocar dummies que representem todos os meus dados (isto é, dummies em que todas as observações vão estar em alguma categoria). E o efeito dessa variável que foi jogada fora vira categoria de referência e o coeficiente vai parar na constante (quando todas são 0, essa variável que foi jogada fora é igual a 1). Já que a constante é o valor médio de Y quando todas as outras são 0. 
+
+Então qual dummy deixar fora?
+
+No caso de uma dummy, o beta significa que quando ela é 0 é não norte e quando é 1 é Norte = 
+Beta 1 então é o efeito médio do norte sobre a votação do PT em 2014
+
+Quando não coloca uma região, o efeito dessa região vai para a constante. Quando não coloca duas regiões, o efeito das duas vai para a constante.
+
+E o efeito você interpreta em relação à categoria de referência (por exemplo,  o efeito é -11 no norte em relação ao nordeste) - no caso, beta 0 corresponde à região que você deixou de fora. 
+
+No caso por exemplo do norte:
+
+o efeito em pt_2014 é = o beta 0 + o beta 1 (no caso o efeito do nordeste, ou da categoria que você removeu, MAIS o efeito do norte)
+
+O efeito sempre é lido com a constante nesse caso.
+
+A significancia estatística no caso significa que todas são diferentes da categoria que você deixou de fora (no exemplo, do nordeste).
+
+
+Como a gente interpreta inserindo a var PT_2010:
+Quantos votos a mais ou a menos em média na região norte em relação à região de referencia (no exemplo é a região sul), mantendo constante a votação de 2010.
+
+Cada região é o efeito delas em relação a que ficou fora
+
+O efeito do Sul é igual à constante 
+O efeito do Norte é igual ao Beta do norte + a constante
+
+Controlando o efeito médio do país inteiro.
+
+Colocando outra região como referência, o valor dela vai pra constante - o efeito da região é sempre o mesmo, mesmo mudando a categoria de referência.
+
+Então qual melhor cat de ref?
+Isso tem a ver com o fenomeno de interesse, que te ajude a pensar na apresentação do resultado, uma variável que faça sentido na discussão, mas os resultados serão sempre os mesmos. 
+
+Na construção da dummy usar 1 para existencia da categoria que vc quer estudar e 0 para ausencia.
+
+E se quiser comparar por exemplo o Nordeste com o resto do país?
+Teria que criar uma dummy não nordeste:
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+base_nao_nordeste <- 
+  base %>% 
+  mutate(nao_nordeste = case_when(Nordeste %in% 1 ~ 0,
+                     Nordeste %in% 0 ~ 1))
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+modelo_nao_nordeste <- 
+  base_nao_nordeste %>% 
+  lm(PT_2014 ~ PT_2010 + nao_nordeste, data =.)
+
+summary(modelo_nao_nordeste)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+modelo_nordeste <- 
+  base_nao_nordeste %>% 
+  lm(PT_2014 ~ PT_2010 + Nordeste, data =.)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results="asis"}
+stargazer(modelo_nao_nordeste, modelo_nordeste,
+          header = FALSE,
+          digits = 3,
+          type = "html")
+```
+
+
+Teste de médias: o que muda fazer um e rodar uma regressão?
+
+```{r}
+chisq.test(base_nao_nordeste$nao_nordeste, base_nao_nordeste$Nordeste)
+
+base_nao_nordeste %>% 
+  filter(nao_nordeste == 0) %>% 
+  summarise(media_2010 = mean(PT_2010))
+
+base_nao_nordeste %>% 
+  filter(nao_nordeste == 1) %>% 
+  summarise(media_2010 = mean(PT_2010))
+
+```
+
+Interações:
+O efeito de uma interação é quando uso na minha explicação uma lógica de que as variaveis explicativas não se acumulam em seus efeitos mas elas interagem em seus efeitos.
+
+Exemplo: o impacto da eleição de 2010 na eleição de 2014 não é igual em todas as regiões, esse efeito não é igual em cada região, olhar ao mesmo tempo em que região a cidade estava E qual foi a votação de 2010. 
+
+Não adianta escrever um modelo em que eu só some os efeitos - eu preciso trabalhar com um modelo com uma variável que considera dois efeitos ao mesmo tempo
+
+Exemplo: capitais do nordeste se tiverem um efeito ainda maior , preciso criar uma variável separada para capitais do nordeste, e aí escreveria com a variável nordeste e não nordeste (em que as outras regiões seriam 0), a variável capital e não capital (em que as 27 capitais do país seriam 1), e a variável nordeste E capital (só as 9 capitais do nordeste sendo 1 e todas as outras cidades sendo 0)
+
+Isso não é a mesma coisa que somar as variáveis: está mudando o intercepto do modelo, isto é, muda a inclinação.
+
+Então são variáveis que você não testa o efeito delas separado, você testa o efeito ao mesmo tempo, questões que se sobrepõem.
+
+
+
+
+
+
+

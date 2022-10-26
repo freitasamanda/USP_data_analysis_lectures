@@ -1,0 +1,267 @@
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# install.packages("corrplot")
+# install.packages("lmtest")
+# install.packages("olsrr")
+# install.packages("stargazer")
+library(lmtest)
+library(olsrr)
+library(corrplot)
+library(tidyverse)
+library(stargazer)
+library(broom)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+dados <- read.csv("base_aula_07.csv")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+head(dados)
+```
+
+Uma das hipóteses do modelo MQO é a de que a relação entre as variáveis é linear. Isto acarreta um obstáculo: e se a relação entre x e y existir, mas não for linear?
+Usando o arquivo que está disponibilizado no Moodle para esta aula (“Base_Lista_Aula_7”), faça o seguinte:
+Considere que esta base indica duas variáveis dependentes (Y1 e Y2), duas explicativas (X1 e X2) e dois controles (C1 e C2). 
+
+Comecemos com a variável dependente Y1.
+
+1)	Faça como na semana passada: Rode cinco modelos introduzindo uma variável dependente por vez – primeiro x1, depois x2 - e depois as dependentes juntas x1 e x2, depois x1, x2 e c1 e c2. O que acontece com os coeficientes destas variáveis entre os modelos? Discuta;
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+modelo01 <- 
+  dados %>% 
+  lm(y1 ~ x1, data = .)
+
+modelo02 <- 
+  dados %>% 
+  lm(y1 ~ x2, data =.)
+
+modelo03 <- 
+  dados %>% 
+  lm(y1 ~ x1 + x2, data =.)
+
+modelo04 <- 
+  dados %>% 
+  lm(y1 ~ x1 + x2 + c1 + c2, data =.)
+
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE, results='asis'}
+stargazer(modelo01, modelo02, modelo03, modelo04, 
+          type = "html",
+          digits =  2)
+```
+
+
+O coeficiente do x1 não muda com a introdução de x2 e muda "pouco" com a introdução das variáveis de controle.
+O x2 também não muda com a introdução de x1, apenas adquire significância estatística.
+E o R2 também não muda do modelo 1 e do modelo 3
+
+
+
+
+2)	Realize os testes de multicolinearidade e de heteroscedasticidade. Discuta os resultados e os corrija se for o caso;
+
+
+Testando a multicolineariedade:
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+corrplot(cor(dados), 
+         method = "number")
+```
+
+
+```{r include=FALSE}
+cor(dados)
+```
+
+
+
+
+A heterocedasticidade é, em estatística, quando os erros não são constantes ao longo de toda a amostra. O termo é contrário à homocedasticidade. Em outras palavras, em modelos de regressão linear diz-se que há heterocedasticidade quando a variância dos erros não é a mesma em todas as observações feitas.
+
+
+A função bptest do pacote lmplot nos ajuda a verificar a heterocedasticidade do modelo:
+
+```{r echo=TRUE}
+bptest(modelo01)
+bptest(modelo02)
+bptest(modelo03)
+bptest(modelo04)
+```
+
+
+Com este resultado, rejeitamos a hipótese nula de que o modelo 1, 3 e 4 são homocedásticos, logo eles são heterocedásticos
+
+O modelo 02 é homocedástico (p valor deu 0.67). Ou seja, a única regressão que tem os resíduos com variância igual é o modelo 02, que só tem x2. Então nesse caso é possível fazer a regressão linear.
+
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+modelo_06 <- 
+  dados %>% 
+  lm(y1 ~., data = .)
+  
+  
+ols_vif_tol(modelo_06)
+```
+
+
+Como aqui não fizemos nenhuma análise descritiva das variáveis, temos apenas o resultado do modelo de regressão para julgar a adequabilidade do próprio modelo.
+
+
+A pergunta que você deve se fazer é: este modelo é bom o suficiente? Não.
+
+
+3)	Construa um gráfico de dispersão entre a variável X1 e Y1. Analise este gráfico em termos da linearidade da relação;
+
+```{r}
+modelo01 %>% 
+  ggplot(aes(x = x1, y = y1)) +
+  geom_point() + 
+  stat_smooth(method='lm')
+```
+
+
+4)	Há alguma transformação de variável que possa ser realizada para adequar melhor o modelo? Explique;
+
+a.	Caso sua resposta seja “sim”, faça a transformação da variável e reporte os resultados, comparando-o com o modelo sem transformação;
+
+- tirando valores NA
+tirando os NAs, encontramos multicolineariedade também entre y2 e x2
+
+b.	Interprete os parâmetros estimados. O que a transformação muda em sua análise inicial sem a transformação?;
+
+
+c.	Não se esqueça de avaliar a multicolinearidade e a heteroscedasticidade.
+
+
+Retirando valores NA do banco:
+```{r include=FALSE}
+which(is.na(dados))
+```
+
+```{r include=FALSE}
+dados_02 <- 
+  dados %>% 
+  na.omit()
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+corrplot(cor(dados_02), 
+         method = "number")
+```
+
+```{r include=FALSE}
+summary(dados_02)
+
+boxplot(dados_02$x2)
+```
+
+Repita o exercício acima, agora utilizando a variável Y2 como variável resposta em seu modelo.
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+modelo10 <- 
+  dados %>% 
+  lm(y2 ~ x1, data = .)
+
+modelo11 <- 
+  dados %>% 
+  lm(y2 ~ x2, data =.)
+
+modelo12 <- 
+  dados %>% 
+  lm(y2 ~ x1 + x2, data =.)
+
+modelo13 <- 
+  dados %>% 
+  lm(y2 ~ x1 + x2 + c1 + c2, data =.)
+
+```
+
+
+```{r paged.print=TRUE, results='asis'}
+stargazer(modelo10, modelo11, modelo12, modelo13, 
+          type = "html",
+          digits =  2)
+```
+
+
+5)	Se for necessária alguma transformação, neste caso, de que forma ela influenciará a sua interpretação dos betas? Explique.
+
+
+## Anotações aula:
+Para aplicar o MQO você assume que a relação de x e y é linear. O que fazer se ela não for linear?
+Com uma análise gráfica é possível ver o ajuste do modelo, mas você não consegue ver qual modelo seria mais adequado. 
+Com um gráfico de dispersão não sabemos qual a importância relativa de cada ponto do gráfico.
+O gráfico por exemplo na questão 3 é claramente heterocedástico - a variância dos resíduos não é linear, a variancia dos pontos em torno da média é muito grande. Vendo o gráfico claramente não há uma função linear que se ajuste a esses dados. Não há como saber no entanto só olhando o gráfico qual a função adequada. 
+Para usar variáveis não lineares num modelo linear é possível elevar a variável ao quadrado ou qualquer que seja o "índice" e rodar o modelo.
+Para além da análise gráfica, há motivos teóricos para achar que a relação entre duas variáveis não é linear (isto é, por exemplo, 1 ano de escolaridade a mais pode não significar aumento de renda, ou aumentar a renda igualmente a cada ano, o retorno pode ir diminuindo, e aí não será uma relação linear).
+Portanto é bom testar se a relação é linear ou não antes de rodar modelos com seus dados. 
+
+O que acontece nesse exemplo se elevarmos ao quadrado - o R2 vai para 60% isso é uma transformação que poderia ser feita na questão 4.
+
+FAZER O GRÁFICO COM OS VALORES DE PREDICTED
+
+```{r}
+modelo_com_x2 %>% 
+  ggplot(aes(x = x2_log, y = y2)) +
+  geom_point()
+```
+
+Elevando o x1 ao quadrado:
+```{r message=FALSE, warning=FALSE, include=FALSE}
+dados_03 <- 
+  dados_02 %>% 
+  mutate(x1_ao_quadrado = x1^2) %>% 
+  mutate(x1_ao_cubo = x1^3) %>% 
+  mutate(x2_log = log(x2))
+
+head(dados_03)
+```
+
+```{r}
+modelo_01_ao_quadrado <- 
+  dados_03 %>% 
+  lm(y1 ~ x1_ao_cubo, data =.)
+```
+
+```{r}
+dados_03 %>% 
+  ggplot(aes(x = x1_ao_quadrado, y = y1)) +
+  geom_point()
+```
+
+
+
+Se testar a multicolineariedade com as variáveis ao quadrado vai ser bem menor
+
+```{r}
+corrplot(cor(dados_03), 
+         method = "number")
+```
+
+```{r}
+modelo_15 <- 
+  dados_03 %>% 
+  lm(y1 ~ ., data = .)
+```
+
+```{r}
+ols_vif_tol(modelo_15)
+```
+
+```{r}
+residuos_modelo_15 <- modelo_15$residuals
+
+preditos_modelo_15 <- predict(modelo_15)
+
+fitted_modelo_15 <- 
+  cbind(dados_03$y2, preditos_modelo_15) %>%
+  as.data.frame()
+
+ggplot(fitted_modelo_15, aes(x = V1, y = preditos_modelo_15)) +
+  geom_point() + 
+  stat_smooth(method='lm')
+```
+
