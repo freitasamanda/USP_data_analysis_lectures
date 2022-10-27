@@ -73,7 +73,9 @@ media_Centro  <-
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tibble(estados = c("Norte", "Nordeste", "Sudeste", "Sul", "Centro_Oeste", "Geral 2010"),
-       medias = c(media_norte, media_nordeste, media_Sudeste, media_Sul, media_Centro, media_2010))
+       medias = c(media_norte, media_nordeste, media_Sudeste, media_Sul, media_Centro, media_2010)) %>% 
+  kable(caption = "Médias por região em 2010", 
+        col.names = c("Estados", "Médias"))
 ```
 
 ## 2014
@@ -113,7 +115,9 @@ media_Centro_2014  <-
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 tibble(estados = c("Norte", "Nordeste", "Sudeste", "Sul", "Centro_Oeste", "Geral 2010"),
-       medias = c(media_norte_2014, media_nordeste_2014, media_Sudeste_2014, media_Sul_2014, media_Centro_2014, media_2014))
+       medias = c(media_norte_2014, media_nordeste_2014, media_Sudeste_2014, media_Sul_2014, media_Centro_2014, media_2014)) %>% 
+  kable(caption = "Médias das Regiões 2014",
+        col.names = c("Estados", "Médias"))
 ```
 
 
@@ -133,9 +137,11 @@ summary(modelo_1)
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results="asis"}
 stargazer(modelo_1, 
-          header = FALSE,
+          omit.stat = c("f"),
           digits = 3,
-          type = "html")
+          type = "html",
+          title = "Modelos Bivariado - votos PT 2010 e 2014",
+          covariate.labels = c("proporção de votos por município para a eleição presidencial de 2010"), header=FALSE, float=FALSE, table.placement="!H")
 ```
 
 Agora adicione as variáveis de dummy de cada uma das regiões em seu modelo de forma a capturar quaisquer discrepâncias regionais.
@@ -143,7 +149,7 @@ Agora adicione as variáveis de dummy de cada uma das regiões em seu modelo de 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 modelo_2_regioes <- 
   base %>% 
-  lm(PT_2014 ~ PT_2010 + Norte + Nordeste + Norte + Sudeste + Centro_Oeste + Sul, data =.)
+  lm(PT_2014 ~ PT_2010 + Norte + Nordeste + Sudeste + Centro_Oeste + Sul, data =.)
 
 summary(modelo_2_regioes)
 ```
@@ -151,7 +157,13 @@ summary(modelo_2_regioes)
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results="asis"}
 stargazer(modelo_1, modelo_2_regioes,
           digits = 3,
-          type = "html")
+          type = "html",
+          omit.stat = c("f"),
+           title = "Modelo com Regiões",
+          covariate.labels = c("proporção de votos por município para a eleição presidencial de 2010", "Norte", "Nordeste", "Sudeste", "Centro Oeste", "Sul"), 
+          header=FALSE, 
+          float=FALSE,
+          table.placement="!H")
 ```
 
 
@@ -166,7 +178,7 @@ Uma questão importante a esta altura está na escolha da dummy que se tornará 
 4)	Escolha uma das regiões como referência e rode seu modelo agora sem a variável da votação do PT em 2010. Interprete os resultados.
 
 
-## Sudeste
+## Modelo sem Sudeste
 ```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
 modelo_sem_sudeste <- 
   base %>% 
@@ -178,7 +190,13 @@ summary(modelo_sem_sudeste)
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results="asis"}
 stargazer(modelo_sem_sudeste, 
           digits = 3,
-          type = "html")
+          type = "html",
+          omit.stat = c("f"),
+           title = "Modelo sem a Região Sudeste",
+          covariate.labels = c("Norte", "Nordeste", "Sul", "Centro Oeste"), 
+          header=FALSE, 
+          float=FALSE,
+          table.placement="!H")
 ```
 
 ## Centro_Oeste
@@ -194,7 +212,13 @@ summary(modelo_sem_centro)
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results="asis"}
 stargazer(modelo_sem_centro,
           digits = 3,
-          type = "html")
+          type = "html",
+          omit.stat = c("f"),
+           title = "Modelo sem a Região Centro-Oeste",
+          covariate.labels = c("Norte", "Nordeste", "Sul", "Sudeste"), 
+          header=FALSE, 
+          float=FALSE,
+          table.placement="!H")
 ```
 
 
@@ -204,17 +228,23 @@ stargazer(modelo_sem_centro,
 6)	Introduza agora a variável de votação do PT em 2010 e rode novamente seu modelo. O que você observa com relação aos parâmetros estimados das dummies?
 
 ```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
-modelo_04 <- 
+modelo_sem_sudeste_PT_2010 <- 
   base %>% 
   lm(PT_2014 ~ PT_2010 + Norte + Nordeste + Sul + Centro_Oeste, data =.)
 
-summary(modelo_04)
+summary(modelo_sem_sudeste_PT_2010)
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results="asis"}
-stargazer(modelo_sem_sudeste, modelo_sem_centro, modelo_04,
+stargazer(modelo_sem_sudeste, 
+          modelo_sem_centro, modelo_sem_sudeste_PT_2010,
           digits = 3,
-          type = "html")
+          type = "html",
+          omit.stat = c("f"),
+           title = "Modelos Multivariados com PT_2010",
+          header=FALSE, 
+          float=FALSE,
+          table.placement="!H")
 ```
 
 7)	Compare o resultado obtido do modelo de regressão com um teste de médias. Quais semelhanças e diferenças encontramos aqui? 
