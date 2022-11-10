@@ -1,0 +1,74 @@
+---
+title: "Lab 06 - Amanda Freitas"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message=FALSE, warning = FALSE)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+#install.packages("sjPlot")
+#install.packages("sjmisc")
+library(sjPlot)
+library(sjmisc)
+library(tidyverse)
+library(tidylog)
+library(stargazer)
+library(readxl)
+library(lmtest)
+library(olsrr)
+library(corrplot)
+library(broom)
+```
+
+
+1. Discuta os conceitos de validade interna e externa.
+2. Quais são as ameaças à validade interna na regressão múltipla?
+3. As simulações a seguir foram feitas com base em “Introduction to Econometrics with R” (HANCK et al, 2020). Estimaremos dois modelos de regressão 1000 vezes cada um e depois obteremos a média dos coeficientes. Compararemos esses valores com os parâmetros da população. Em cada caso, identifique qual é a ameaça à validade interna nos dois modelos.
+
+## Modelo 1
+
+Nesta simulação a função de regressão real da população é:
+
+$$Y_{i}=X_{i}^{2}$$
+
+Se estimarmos a regressão abaixo encontraremos o  da população? Compare o  com o da população, que é igual a 0.
+
+$$Y_{i}=\hat{\beta}_{0} + \hat{\beta}_{1}X_{i}+\upsilon _{i}$$
+
+Podemos encontrar o mesmo $\beta_0$ por coincidência, então, estimaremos a regressão 1000 vezes e depois comparemos a médias dos  estimados com o $\beta_0$ da população. Por que estamos estimando a regressão 1000 vezes ao invés de apenas uma vez?
+
+```{r}
+#definindo o seed
+set.seed(42)
+
+#defina o numero de iteracoes
+N <- 1000
+
+#crie um vetor dos beta_hats
+beta_0 <- c()
+
+#estimando os 1000 beta_hats
+
+##loop: pedindo para rodar o modelo N(1k) vezes
+for (i in 1:N) {
+  
+  #simulando os dados
+  X <- runif(100, -5, 5)
+  Y <- X^2 + rnorm(100)
+  
+  #estimando a regressao linear
+  ms_mod <- lm(Y ~X)
+  
+  #salvando as estimativas
+  beta_0[i] <- ms_mod$coefficients[1]
+}
+
+#obtendo a media dos beta_0 estimados
+mean(beta_0)
+## [1] 8.30133
+# esse valor eh igual a o?
+mean(beta_0) == 0
+## [1] FALSE
+```
+

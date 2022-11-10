@@ -183,7 +183,10 @@ modelo13 <-
 ```{r paged.print=TRUE, results='asis'}
 stargazer(modelo10, modelo11, modelo12, modelo13, 
           type = "html",
-          digits =  2)
+          digits =  2,
+          omit.stat=c("f"),
+          title = "Modelos Bivariados",
+          header=FALSE, float=FALSE, table.placement="!H")
 ```
 
 
