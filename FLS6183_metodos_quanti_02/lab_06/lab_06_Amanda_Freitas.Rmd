@@ -20,6 +20,7 @@ library(olsrr)
 library(corrplot)
 library(broom)
 ```
+
 Para realizar esta lista de exercícios, considere a base da dados que está no Moodle. Esta é uma base com dados reais, com os resultados das eleições nacionais de 2010 e 2014 – a mesma da semana passada.
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -253,7 +254,7 @@ base_2 %>%
 ```
 
 
-*Já a respeito dos gráficos de dispersão, vemos que o gráfico para Nordeste=1 aparenta mais seguir uma distribuição logarítimica.*
+*Já a respeito dos gráficos de dispersão, vemos que o gráfico para Nordeste=0 aparenta mais seguir uma distribuição logarítimica.*
 
 Ainda seguindo a proposição dos autores, vamos executar a primeira de suas proposições que é a de regressão linear baseada em intervalos (bins). Através desta regressão, teremos condições de confirmar se a relação é mesmo linear ou não. O resultado da regressão é dividido em 3 valores representativos de cada tercil dos dados, e chamado de Baixo (L), Médio (M), Alto (H). É possível também considerar o suporte da variável moderadora. O gráfico abaixo apresenta os resultados:
 
@@ -266,3 +267,26 @@ Vamos, então, partir para uma avaliação semi-paramétrica. Esta nos permitir�
 ![Graph 4](image_04.png)
 
 4. Qual a conclusão podemos tirar do efeito do nosso tratamento sobre a votação para o PT, em termos de linearidade e de suporte da variável moderadora? Em relação ao nosso resultado obtido na aula passada, ele se sustenta? Por que?
+
+
+
+# Anotações da aula
+
+## sobre o lab 06
+
+A ideia do lab da semana passada era discutir problemas que podem surgir ao mudar para o modelo interativo.
+
+O efeito de X2 sobre Y depende de X1
+
+Primeiro pressuposto - o efeito de X1 sobre Y é linear, se temos um problema de especificação que pode afetar essa relação, vai afetar tb o efeito de X2 - pode ser que a relação esteja numa formulação matemática que não seja linear
+
+Solução proposta pelos autores é avaliar qual a relação antes de fazer o modelo, **vendo para faixas de valores diferentes** - o efeito pode mudar de uma faixa pra outra, pode não ser constante para todas as faixas de valores (ou seja, não ser linear), implicando numa relação mais complexa.
+
+Estamos apontando que os beneficiários do PBF NO NORDESTE tem uma propensão AINDA MAIOR a votar no PT
+
+O objetivo é vermos se essas coisas são diferentes ou não - isto é, se o modelo interativo, as variáveis interagindo, é diferente das variáveis não interagindo.
+
+Como beta 2 + b3 < b2 então o efeito do PBF é maior fora do Nordeste do que no Nordeste, votam mais fora do nordeste do que no nordeste. 
+
+Se tenho distribuições diferentes é natural que as curvas sejam diferentes, isso pode ter menos a ver com o efeito das variáveis e mais com a distribuição dos dados (ver os histogramas). No ultimo grafico vemos que a relação nao é linear, porque ela muda em cada intervalo. 
+
