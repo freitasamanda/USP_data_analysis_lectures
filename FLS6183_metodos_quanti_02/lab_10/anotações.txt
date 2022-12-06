@@ -1,0 +1,12 @@
+Social conflict é um collider então controla pelas outras variáveis - economic conditions e international linkage
+
+Se medir social conflict você estará medindo o efeito de economic conditions, international linkage várias vezes. 
+
+A gente tem uma causa que é um collider. 
+
+Segundo desenho
+Há variáveis que não afetam popular mobilizarion e regime change, então elas não entram no seu modelo, e na verdade nem precisariam entrar no DAG
+
+Variáveis ascendentes - todo ramo que causa social networks por exemplo
+
+Nenhum controle, porque o DAG do jeito que está construído não tem nenhuma relação afetando a associação de X com Y, do jeito que foi desenhado não há variáveis confundidoras. 

@@ -1,0 +1,123 @@
+---
+title: "Mídia, identificação partidária e adesão democrática"
+author: "Amanda Freitas"
+date: '2022-11-29'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = F, warning = F, paged.print = T)
+```
+
+```{r include=FALSE}
+library(tidyverse)
+library(tidylog)
+library(tidyr)
+library(data.table)
+library(readr)
+```
+
+
+
+Dieta de mídia e uso de mídia para se informar sobre política como VARIÁVEL INDEPENDENTE
+
+Impacto nas variáveis de adesão democrática e partidarismo VARIÁVEL DEPENDENTE
+
+Maior uso de redes sociais e internet está relacionado com menor adesão democrática e antipartidarismo?
+
+A literatura diz que com as redes sociais o consumo de conteúdo político com desinformação e polarizador, incitando ódio e intolerância, aumentou. Isso significa que indivíduos que usam mais esse tipo de mídia do que a mídia tradicional tenderiam a ter opiniões mais extremistas. 
+
+## LATINOBAROMETRO 2020
+
+Q10STGBS. With which of the following statements do you
+agree most? (READ THE ALTERNATIVES AND TICK ONE)
+Democracy is preferable to any
+other kind of government...............1
+
+Under some circumstances, an
+authoritarian government can be
+preferable to a democratic
+one....................................2
+
+For people like me, it doesn’t matter
+whether we have a democratic or
+non-democratic regime..................3
+
+DNK....................................8
+
+Essa é uma questão clara de ADESÃO DEMOCRÁTICA que pode ser modelada como variável discreta -> o que leva as pessoas a escolherem?
+
+Q11STGBS.A-B In general, would you say you are very
+satisfied, quite satisfied, not very satisfied, or not
+at all satisfied with the working of the democracy in
+(country)? (READ ALTERNATIVES AND TICK ONE IN
+Q11STGBS.A)  
+Q11STGBS.
+Very satisfied ........ 1
+Quite satisfied ....... 2
+Not very satisfied .... 3
+Not at all satisfied .. 4
+
+Isso aqui importa pra adesão democrática, uma pessoa mais satisfeita tende a dizer que está mais feliz com a democracia?
+
+
+
+Q18ST. (SHOW CARD 4) In politics, people normally speak of “left” and “right”. On a scale where 0 is left and 10 is right, where would you place yourself? (TICK ONE ANSWER)
+LEFT RIGHT
+00
+01
+02
+03
+04
+05
+06
+07
+08
+09
+10
+None...97 DNK...98 NA...99DON’T READ
+
+Ser de esquerda ou de direita importa? eu posso transformar em variável discreta com 3 categorias - esquerda, centro e direita
+
+Q20STA-20STG. (SHOW CARD 6) Do you strongly agree (1), agree (2), disagree (3) or strongly disagree (4) with the following statements. (READ EACH STATEMENTS AND TICK ONE FOR EACH)
+SA A D SD DNK/NA
+Q20ST.A Democracy may have
+problems but it is the best
+system of government. .................. 1 2 3 4 0
+Q20STM.B I wouldn't mind if an
+undemocratic government came to power
+if it can solved the problems. ........ 1 2 3 4 0
+Q20STM.C Democracy allows us to
+solve the problems we have ............. 1 2 3 4 0
+Q20STM.D In case of difficulties it is
+allright for the president to control
+the media .............................. 1 2 3 4 0
+Q20ST.E It is possible to eradicate
+corruption from politics ............... 1 2 3 4 0
+Q20ST.F. It is allright to pay the
+price of some corruption
+if problems are solved. ............... 1 2 3 4 0
+Q20STI.G. If I do not report an act of
+corruption that I am aware of,
+I become an accomplice ................. 1 2 3 4 0
+
+Mais uma variável de adesão democrática
+
+Q46ST. How interested are you in politics? (READ ALTERNATIVES AND TICK ONE)
+Very interested............ 1
+Fairly interested.......... 2
+A little interested.........3
+Not at all interested ..... 4
+DNK................. 8 DON’T READ
+DNA............... 0
+
+INTERESSE EM POLÍTICA, pode ser transformado tb em uma dummy - interessado ou nao interessado - ser interessado faz a pessoa aderir mais à democracia??
+
+
+
+## VARIÁVEIS MIDIÁTICAS
+Eu posso fazer com vars categóricas, traçando por exemplo 4 perfis de consumo de mídia 
+
+
+
+
