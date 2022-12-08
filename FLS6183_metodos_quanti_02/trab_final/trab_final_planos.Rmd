@@ -1,5 +1,5 @@
 ---
-title: "Mídia, identificação partidária e adesão democrática"
+title: "Internet e adesão democrática: análise de regressão com base nos dados do European Social Survey - onda 11 - 2020"
 author: "Amanda Freitas"
 date: '2022-11-29'
 output: html_document
@@ -18,106 +18,74 @@ library(readr)
 ```
 
 
+O presente trabalho busca explorar a relação entre o uso de internet e redes sociais para informar-se sobre política e a adesão democrática. 
 
-Dieta de mídia e uso de mídia para se informar sobre política como VARIÁVEL INDEPENDENTE
+A literatura diz que com as redes sociais o consumo de conteúdo político com desinformação e polarizador, incitando ódio e intolerância, aumentou nos últimos anos. 
 
-Impacto nas variáveis de adesão democrática e partidarismo VARIÁVEL DEPENDENTE
+A qualidade da informação com a qual um indivíduo entra em contato em plataformas de rede sociais (principais veículos de acesso  à informação na internet) seria duvidosa e hiperpartidária, deslocando e distorcendo compromissos do jornalismo tradicional, como o da imparcialidade e respeito aos valores democráticos.
 
-Maior uso de redes sociais e internet está relacionado com menor adesão democrática e antipartidarismo?
+Além disso, desde as eleições presidenciais de 2016 nos Estados Unidos, com a vitória de Donald Trump, o escândalo da Cambridge Analytica e envolvimento do Facebook nas eleições, Brexit e a eleição de
+Jair Bolsonaro no Brasil em 2018, a literatura de ciência política tem mostrado a prevalência de conteúdos de extrema-direita, desinformação, discursos de ódio e outros de natureza antidemocrática nas redes sociais mais utilizadas ao redor do mundo
 
-A literatura diz que com as redes sociais o consumo de conteúdo político com desinformação e polarizador, incitando ódio e intolerância, aumentou. Isso significa que indivíduos que usam mais esse tipo de mídia do que a mídia tradicional tenderiam a ter opiniões mais extremistas. 
+Isso significa que indivíduos que usam mais esse tipo de mídia do que a mídia tradicional tenderiam a ter opiniões mais extremistas, e menor comprometimento com os valores tradicionais da democracia.
 
-## LATINOBAROMETRO 2020
+## DAG
 
-Q10STGBS. With which of the following statements do you
-agree most? (READ THE ALTERNATIVES AND TICK ONE)
-Democracy is preferable to any
-other kind of government...............1
+A literatura a respeito do conceito de adesão democrática fornece, no entanto, outras explicações com variáveis diversas, que são resumidas no modelo abaixo:
 
-Under some circumstances, an
-authoritarian government can be
-preferable to a democratic
-one....................................2
+INSERIR DAG AQUI
 
-For people like me, it doesn’t matter
-whether we have a democratic or
-non-democratic regime..................3
+Primeiramente, temos a relação entre sofisticação política e adesão democrática, isto é, indivíduos com maior conhecimento sobre o funcionamento do sistema político, e do próprio conceito de democracia em si, tenderiam a ter maior adesão democrática. Sofisticação política é, por sua vez, afetada pelo interesse em política e a educação do indivíduo: indivíduos mais interessados em participar politicamente e informar-se sobre política, assim como indivíduos com maior escolaridade, tenderiam a ter maior adesão democrática.
 
-DNK....................................8
+Temos em seguida variáveis relacionadas à satisfação. Satisfação do indivíduo com a situação econômica de seu país está relacionada a uma maior satisfação com a democracia, o que por sua vez impacta na adesão democrática, isto é, indivíduos mais satisfeitos com o desempenho do regime democrático tendem a ser mais favoráveis a este. 
 
-Essa é uma questão clara de ADESÃO DEMOCRÁTICA que pode ser modelada como variável discreta -> o que leva as pessoas a escolherem?
+Por fim, temos duas variáveis sociodemográficas que impactam mais de uma variável do modelo. Indivíduos com maior renda tendem a ter mais acesso a aparelhos eletrônicos e a melhor sinal de internet, afetando nossa variável independente. Além disso, uma maior renda impacta a satisfação que um indivíduo demonstra com a situação econômica de seu país. Por fim, temos educação, que afeta a renda, o uso de internet, devido ao maior letramento digital dos indivíduos e proficiência para utilizar plataformas digitais, assim como impacta interesse em política.
 
-Q11STGBS.A-B In general, would you say you are very
-satisfied, quite satisfied, not very satisfied, or not
-at all satisfied with the working of the democracy in
-(country)? (READ ALTERNATIVES AND TICK ONE IN
-Q11STGBS.A)  
-Q11STGBS.
-Very satisfied ........ 1
-Quite satisfied ....... 2
-Not very satisfied .... 3
-Not at all satisfied .. 4
-
-Isso aqui importa pra adesão democrática, uma pessoa mais satisfeita tende a dizer que está mais feliz com a democracia?
-
-
-
-Q18ST. (SHOW CARD 4) In politics, people normally speak of “left” and “right”. On a scale where 0 is left and 10 is right, where would you place yourself? (TICK ONE ANSWER)
-LEFT RIGHT
-00
-01
-02
-03
-04
-05
-06
-07
-08
-09
-10
-None...97 DNK...98 NA...99DON’T READ
-
-Ser de esquerda ou de direita importa? eu posso transformar em variável discreta com 3 categorias - esquerda, centro e direita
-
-Q20STA-20STG. (SHOW CARD 6) Do you strongly agree (1), agree (2), disagree (3) or strongly disagree (4) with the following statements. (READ EACH STATEMENTS AND TICK ONE FOR EACH)
-SA A D SD DNK/NA
-Q20ST.A Democracy may have
-problems but it is the best
-system of government. .................. 1 2 3 4 0
-Q20STM.B I wouldn't mind if an
-undemocratic government came to power
-if it can solved the problems. ........ 1 2 3 4 0
-Q20STM.C Democracy allows us to
-solve the problems we have ............. 1 2 3 4 0
-Q20STM.D In case of difficulties it is
-allright for the president to control
-the media .............................. 1 2 3 4 0
-Q20ST.E It is possible to eradicate
-corruption from politics ............... 1 2 3 4 0
-Q20ST.F. It is allright to pay the
-price of some corruption
-if problems are solved. ............... 1 2 3 4 0
-Q20STI.G. If I do not report an act of
-corruption that I am aware of,
-I become an accomplice ................. 1 2 3 4 0
-
-Mais uma variável de adesão democrática
-
-Q46ST. How interested are you in politics? (READ ALTERNATIVES AND TICK ONE)
-Very interested............ 1
-Fairly interested.......... 2
-A little interested.........3
-Not at all interested ..... 4
-DNK................. 8 DON’T READ
-DNA............... 0
-
-INTERESSE EM POLÍTICA, pode ser transformado tb em uma dummy - interessado ou nao interessado - ser interessado faz a pessoa aderir mais à democracia??
-
-
-
-## VARIÁVEIS MIDIÁTICAS
-Eu posso fazer com vars categóricas, traçando por exemplo 4 perfis de consumo de mídia 
+CAMINHOS ENTRE VI E VD
+O uso de internet impacta INDIRETAMENTE pela educação
 
 
 
 
+Que variáveis podem ser confundidoras
+
+Ou seja, que outras coisas podem causar menor adesão democrática?
+
+
+
+
+# EUROPEAN SOCIAL SURVEYS
+ESS10-2020
+https://ess-search.nsd.no/en/study/172ac431-2a06-41df-9dab-c1fd8f3877e7
+
+
+```{r include=FALSE}
+data <- read.csv("ESS/ESS10.csv")
+```
+
+```{r echo=FALSE}
+head(data)
+
+dim(data)
+```
+
+
+### uso de internet
+
+
+### adesão democrática
+
+
+### satisfação econômica
+
+
+### satisfação com a democracia
+
+
+### satisfação econômica
+
+
+### renda
+
+
+### educação
