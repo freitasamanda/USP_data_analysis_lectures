@@ -1,0 +1,220 @@
+---
+title: "Internet e adesão democrática: análise de regressão com base nos dados do European Social Survey - onda 11 - 2020"
+author: "Amanda Freitas"
+date: '2022-11-29'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = F, warning = F, paged.print = T)
+```
+
+```{r include=FALSE}
+library(tidyverse)
+library(tidylog)
+library(tidyr)
+library(data.table)
+library(readr)
+library(ggplot2)
+```
+
+# Introdução
+
+O presente trabalho busca explorar a relação entre o uso de internet e redes sociais e a adesão democrática. 
+
+A literatura diz que, de modo geral, com as redes sociais, o consumo de conteúdo político com desinformação e polarizador, incitando ódio e intolerância, aumentou nos últimos anos (REFs). 
+
+A qualidade da informação com a qual um indivíduo entra em contato em plataformas de rede sociais (principais veículos de acesso à informação na internet) seria duvidosa e hiperpartidária, deslocando e distorcendo compromissos do jornalismo tradicional, como o da imparcialidade e respeito aos valores democráticos (REFS).
+
+Além disso, desde as eleições presidenciais de 2016 nos Estados Unidos, com a vitória de Donald Trump, o escândalo da Cambridge Analytica e envolvimento do Facebook nas eleições, Brexit e a eleição de
+Jair Bolsonaro no Brasil em 2018, a literatura de ciência política tem mostrado a prevalência de conteúdos de extrema-direita, desinformação, discursos de ódio e outros de natureza antidemocrática nas redes sociais mais utilizadas ao redor do mundo (REFS).
+
+Tendo em vista esta breve revisão teórica, é possível estabelecer a hipótese de que indivíduos que usam mais esse tipo de mídia do que a mídia tradicional tenderiam a ter opiniões mais extremistas, e menor comprometimento com os valores tradicionais da democracia. O conceito de adesão democrática, no entanto, possui uma história mais longa do que a existência da internet e das redes sociais, oferecendo explicações diversas para os motivos pelos quais indivíduos aderem aos valores clássicos da democracia, demonstram satisfação com esta forma de regime, ou demonstram-se favoráveis à intervenções militares e regimes autoritários (REFS) 
+
+O DAG busca sistematizar brevemente esta literatura:
+
+INSERIR DAG AQUI
+
+Primeiramente, temos a relação entre sofisticação política e adesão democrática, isto é, indivíduos com maior conhecimento sobre o funcionamento do sistema político, e do próprio conceito de democracia em si, tenderiam a ter maior adesão democrática (REFS). 
+
+Sofisticação política é, por sua vez, afetada pelo interesse em política e a educação do indivíduo: indivíduos mais interessados em participar politicamente e informar-se sobre política, assim como indivíduos com maior escolaridade, tenderiam a ter maior adesão democrática.
+
+Temos em seguida variáveis relacionadas à satisfação. Satisfação do indivíduo com a situação econômica de seu país está relacionada a uma maior satisfação com a democracia, o que por sua vez impacta na adesão democrática, isto é, indivíduos mais satisfeitos com o desempenho do regime democrático tendem a ser mais favoráveis a este (REFS). 
+
+Por fim, temos duas variáveis sociodemográficas que impactam mais de uma variável do modelo. Indivíduos com maior renda tendem a ter mais acesso a aparelhos eletrônicos e a melhor sinal de internet, afetando nossa variável independente. Além disso, uma maior renda impacta a satisfação que um indivíduo demonstra com a situação econômica de seu país. Por fim, temos educação, que afeta a renda, o uso de internet, devido ao maior letramento digital dos indivíduos e proficiência para utilizar plataformas digitais, assim como impacta interesse em política.
+
+Tendo em vista o DAG apresentado, podemos concluir que o efeito total do uso de internet na variável Adesão Democrática, passa pelas variáveis 
+
+
+
+# EUROPEAN SOCIAL SURVEY - Análise inicial dos dados
+ESS10-2020
+https://ess-search.nsd.no/en/study/172ac431-2a06-41df-9dab-c1fd8f3877e7
+
+
+```{r include=FALSE}
+data <- read.csv("ESS/ESS10.csv")
+```
+
+```{r include=FALSE}
+head(data)
+
+dim(data)
+
+working_data <- data %>% 
+  select(-name, -essround, edition, -proddate, -idno, -cntry, -dweight, -pweight, - prob, -stratum)
+```
+
+## Operacionalização das variáveis com os dados do ESS
+
+
+### Variáveis de interesse
+
+- uso de internet
+
+*netustm* - Internet use, how much time on typical day, in minutes
+
+A3 On a typical day, about how much time do you spend using the internet on a computer, tablet, smartphone or other device, whether for work or personal use?
+
+NA Values:
+6666
+7777
+8888
+9999
+
+- Adesão democrática
+
+*implvdm*
+How important for you to live in democratically governed country
+
+Scale of 0 to 10
+0 -  	Not at all important
+10 - Extremely important
+
+NA values
+77
+88
+99
+
+### Controles
+
+- *Satisfação com a democracia*
+
+Para operacionalizar esta variável, utilizarei a questão:
+
+stfdem - How satisfied with the way democracy works in country 
+
+B30 And on the whole, how satisfied are you with the way democracy works in [country]?
+
+Scale of 0 to 10
+0 - Extremely dissatisfied
+10 - Extremely satisfied
+
+NA values
+77
+88
+99
+
+
+- *Educação*
+
+Devido as diferenças nos sistemas educacionais de cada país, ao invés de utilizar uma variável categórica que diferencie entre faixas de escolaridade (ensino fundamental, médio, superior etc), utilizarei anos completos de escolaridade:
+
+eduyrs - Years of full-time education completed
+
+F16 About how many years of education have you completed, whether full-time or part-time? Please report these in full-time equivalents and include compulsory years of schooling.
+
+NA Values
+77
+88
+99
+
+
+- Sofisticação Política
+
+Há muitas formas de operacionalizar o conceito de sofisticação política. O ESS tem um conjunto de variáveis agrupadas na categoria "understanding of democracy". Dentro dessa categoria, para o presente trabalho, será utilizada a questão que indaga os entrevistados sobre a importância de eleições livres para a democracia.
+
+
+*fairelc* - National elections are free and fair 
+
+D1-5 Using this card, please tell me how important you think it is for democracy in general... ...that national elections are free and fair?
+
+Scale of 0 to 10
+0 - not at all importante for democracya in general
+10 - Extremely important for democracy in general
+
+NA Values
+77
+88
+99
+
+```{r include=FALSE}
+#selecting useful variables
+useful_variables <- c("fairelc","eduyrs","stfdem","implvdm","netustm")
+
+working_data <- 
+  working_data %>% 
+  select(useful_variables)
+
+head(working_data)
+```
+
+```{r include=FALSE}
+#dropping NA values
+
+na_variables <- c(77,88,99)
+na_net <- c(6666, 7777, 8888, 9999)
+
+working_data <- working_data %>% 
+  filter(fairelc != 77 c(77,88,99),
+         eduyrs != na_variables,
+         stfdem != na_variables,
+         implvdm != na_variables,
+         netustm != na_net)
+  
+working_data %>% 
+  arrange(-fairelc)
+
+dim(working_data)
+head(working_data)
+```
+
+```{r}
+#renaming for more useful names
+
+working_data2 <- working_data %>% 
+  rename(sofisticacao_politica = fairelc,
+         educacao = eduyrs,
+         satisfacao_democratica = stfdem,
+         adesao_democracia = implvdm,
+         minutos_internt = netustm)
+```
+
+
+# Estatísticas descritivas
+
+Como as variáveis estão distribuídas?
+
+Que tipo de vars elas são?
+
+
+O que se espera da relação de X e Y no modelo de acordo com as hipóteses, ou seja, que tipo de resultados espero encontrar nos coeficientes?
+
+Qual distribuição forma a relação de X e Y?
+
+
+Que tipo de modelo é o mais adequado?
+
+# Rodando o modelo
+
+Incluir a fórmula do modelo
+
+Rodar o modelo
+
+Interpretar os coeficientes do modelo
+
+Testar heterocedasticidade e multicolineariedade
+
+
+# Testes de robustez
+

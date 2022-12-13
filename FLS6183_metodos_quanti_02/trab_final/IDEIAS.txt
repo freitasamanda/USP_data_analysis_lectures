@@ -21,5 +21,122 @@ https://www.cesop.unicamp.br/por/banco_de_dados
 
 
 
+DAG
+
+CAMINHOS ENTRE VI E VD
+O uso de internet impacta INDIRETAMENTE 
+pela educação
 
 
+
+
+Só que educação é um collider - impacta tanto adesão demo quanto uso de interet
+
+
+
+Que variáveis podem ser confundidoras
+
+Ou seja, que outras coisas podem causar menor adesão democrática?
+
+
+ESEB
+
+D3 Escolaridade
+P05 sofisticação política
+Q21 Satisfação com a democracia
+P08 Adesão democrática
+P25 Internet e redes sociais para informação política
+
+ESCOLARIDADE
+D3. Escolaridade: Até que série o(a) sr(a) estudou e concluiu?
+01( ) Analfabeto/ Nunca frequentou escola
+02( ) Primário incompleto (até 3ª série ou 4º ano do ensino fundamental)
+03( ) Primário completo (4ª.série ou 5º ano do ensino fundamental)
+04( ) Ginásio incompleto (até 7ª série ou 8º ano do ensino fundamental)
+05( ) Ginásio completo (8ª série ou 9º ano do ensino fundamental)
+06( ) Colegial incompleto (até 2ª série do ensino médio)
+07( ) Colegial completo (3ª série do ensino médio)
+08( ) Ensino universitário incompleto ou especialização (técnico após
+ensino médio)
+09( ) Ensino universitário completo
+10( ) Pós-graduação ou mais
+
+
+
+## SOFISTICAÇÃO POLÍTICA
+
+P05. De forma geral, você acredita que as eleições no Brasil são confiáveis ou são objeto de fraude?
+(ESTIMULADA E RU)
+1.As eleições são confiáveis
+2.São objetos de fraude
+8.NÃO SABE
+9.NÃO RESPONDEU
+
+
+## SATISFAÇÃO COM DEMOCRACIA
+
+Q21. De uma maneira geral, o(a) sr(a) está muito satisfeito(a), satisfeito(a), pouco satisfeito(a) ou
+nada satisfeito(a) com o funcionamento da democracia no Brasil? (RU)
+1 ( ) Muito satisfeito(a)
+2 ( ) Satisfeito(a)
+3 ( ) Nem satisfeito(a), nem insatisfeito(a) (espontânea)
+4 ( ) Pouco satisfeito(a)
+5 ( ) Nada satisfeito(a)
+8 ( ) Não sabe (espontânea)
+7 ( ) Não respondeu (espontânea)
+
+
+## ADESÃO DEMOCRÁTICA
+
+P08. Algumas pessoas dizem que a democracia é sempre melhor que qualquer outra forma de governo.
+Para outros, em algumas situações é melhor uma ditadura do que uma democracia. Qual destas
+afirmações é mais parecida com sua forma de pensar? (RU)
+1 ( ) A democracia é sempre melhor que qualquer outra forma de governo
+2 ( ) Em algumas situações é melhor uma ditadura do que uma democracia
+3 ( ) Tanto faz / nenhuma das duas é melhor (espontânea)
+8 ( ) Não sabe (espontânea)
+9 ( ) Não respondeu (espontânea)
+
+
+## INTERNET/REDES SOCIAIS PARA INFO POLÍTICA
+
+
+P25. . (CARTELA 6) Qual destes meios o(a) sr(a) mais utiliza para se informar sobre política? (RU)
+1-Jornais e Revistas
+2-Noticiário da TV
+3-Rádio
+4-Blogs da internet
+5-Redes sociais, Facebook, twitter, whatsapp
+6-Conversa com amigos e familiares
+7-Conversa com colegas de trabalho
+8-Busca no Google
+9-Não se informa sobre política (ESPONTÂNEA) _ PULE PARA P27
+10-Nenhum destes (ESPONTÂNEA) - PULE PARA P27
+88 NÃO SABE
+99 NÃO RESPONDEU
+
+
+
+### OUTRAS
+Q02. E com qual intensidade o(a) sr(a) acompanha política na TV, no rádio, nos jornais ou na
+internet: Muita intensidade, alguma intensidade, pouca intensidade, ou não acompanha política? (RU)
+1. Muita intensidade
+2. Alguma intensidade
+3. Pouca intensidade
+4. Não acompanho
+8. Não sabe
+7. Não respondeu
+9. MISSING
+
+
+Satisfação economica:
+Q11. O(A) sr(a) considera que a situação econômica atual do país está muito melhor, um pouco
+melhor, está igual, um pouco pior ou muito pior que nos últimos doze meses?
+1 – Muito melhor
+2 – Um pouco melhor
+3 – Igual
+4 – Um pouco pior
+5 – Muito pior
+7. Não respondeu
+8. Não sabe
+9. MISSING

@@ -1,0 +1,243 @@
+---
+title: 'Internet e adesão democrática: análise de regressão com base nos dados do
+  European Social Survey - onda 11 - 2020'
+author: "Amanda Freitas"
+date: '2022-11-29'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = F, warning = F, paged.print = T)
+```
+
+```{r include=FALSE}
+library(tidyverse)
+library(tidylog)
+library(tidyr)
+library(data.table)
+library(readr)
+library(ggplot2)
+library(foreign)
+library(readxl)
+library(stargazer)
+```
+
+# Introdução
+
+O presente trabalho busca explorar a relação entre o uso de internet e redes sociais e a adesão democrática. 
+
+A literatura diz que, de modo geral, com as redes sociais, o consumo de conteúdo político com desinformação e polarizador, incitando ódio e intolerância, aumentou nos últimos anos (REFs). 
+
+A qualidade da informação com a qual um indivíduo entra em contato em plataformas de rede sociais (principais veículos de acesso à informação na internet) seria duvidosa e hiperpartidária, deslocando e distorcendo compromissos do jornalismo tradicional, como o da imparcialidade e respeito aos valores democráticos (REFS).
+
+Além disso, desde as eleições presidenciais de 2016 nos Estados Unidos, com a vitória de Donald Trump, o escândalo da Cambridge Analytica e envolvimento do Facebook nas eleições, Brexit e a eleição de
+Jair Bolsonaro no Brasil em 2018, a literatura de ciência política tem mostrado a prevalência de conteúdos de extrema-direita, desinformação, discursos de ódio e outros de natureza antidemocrática nas redes sociais mais utilizadas ao redor do mundo (REFS).
+
+Tendo em vista esta breve revisão teórica, é possível estabelecer a hipótese de que indivíduos que usam mais esse tipo de mídia do que a mídia tradicional tenderiam a ter opiniões mais extremistas, e menor comprometimento com os valores tradicionais da democracia. O conceito de adesão democrática, no entanto, possui uma história mais longa do que a existência da internet e das redes sociais, oferecendo explicações diversas para os motivos pelos quais indivíduos aderem aos valores clássicos da democracia, demonstram satisfação com esta forma de regime, ou demonstram-se favoráveis à intervenções militares e regimes autoritários (REFS) 
+
+O DAG busca sistematizar brevemente esta literatura:
+
+INSERIR DAG AQUI
+
+Primeiramente, temos a relação entre sofisticação política e adesão democrática, isto é, indivíduos com maior conhecimento sobre o funcionamento do sistema político, e do próprio conceito de democracia em si, tenderiam a ter maior adesão democrática (REFS). 
+
+Sofisticação política é, por sua vez, afetada pelo interesse em política e a educação do indivíduo: indivíduos mais interessados em participar politicamente e informar-se sobre política, assim como indivíduos com maior escolaridade, tenderiam a ter maior adesão democrática.
+
+Temos em seguida variáveis relacionadas à satisfação. Satisfação do indivíduo com a situação econômica de seu país está relacionada a uma maior satisfação com a democracia, o que por sua vez impacta na adesão democrática, isto é, indivíduos mais satisfeitos com o desempenho do regime democrático tendem a ser mais favoráveis a este (REFS). 
+
+Por fim, temos duas variáveis sociodemográficas que impactam mais de uma variável do modelo. Indivíduos com maior renda tendem a ter mais acesso a aparelhos eletrônicos e a melhor sinal de internet, afetando nossa variável independente. Além disso, uma maior renda impacta a satisfação que um indivíduo demonstra com a situação econômica de seu país. Por fim, temos educação, que afeta a renda, o uso de internet, devido ao maior letramento digital dos indivíduos e proficiência para utilizar plataformas digitais, assim como impacta interesse em política.
+
+Tendo em vista o DAG apresentado, podemos concluir que o efeito total do uso de internet na variável Adesão Democrática, passa pelas variáveis 
+
+
+
+# ESEB-2018 ESTUDO ELEITORAL BRASILEIRO - Análise inicial dos dados
+https://www.cesop.unicamp.br/por/banco_de_dados/v/4538
+
+```{r include=FALSE}
+data <- foreign::read_sav("ESEB/04622.sav")
+
+head(data)
+
+
+information_variables <- read_excel( "ESEB/04622_Informações_variáveis.xlsx")
+
+#head(data)
+#head(information_variables)
+#dim(data)
+#unique(data$localidade)
+#View(information_variables)
+```
+
+```{r include=FALSE}
+working_data <- data %>% 
+  select(-entrevistador, - A1_Nquest, - peso, -tempo_entrevista, -DIAENTR, -MESENTR, -ANOENTR)
+```
+
+D3 Escolaridade
+P05 sofisticação política
+Q21 Satisfação com a democracia
+P08 Adesão democrática
+P25 Internet e redes sociais para informação política
+
+## Operacionalização das variáveis com os dados do ESEB
+
+
+### Variáveis de interesse
+
+- *Uso de internet para informação política*
+P25. Qual destes meios o(a) sr(a) mais utiliza para se informar sobre política? (RU)
+1-Jornais e Revistas
+2-Noticiário da TV
+3-Rádio
+4-Blogs da internet
+5-Redes sociais, Facebook, twitter, whatsapp
+6-Conversa com amigos e familiares
+7-Conversa com colegas de trabalho
+8-Busca no Google
+9-Não se informa sobre política (ESPONTÂNEA) _ PULE PARA P27
+10-Nenhum destes (ESPONTÂNEA) - PULE PARA P27
+88 NÃO SABE
+99 NÃO RESPONDEU
+
+
+
+- *Adesão democrática*
+P08. Algumas pessoas dizem que a democracia é sempre melhor que qualquer outra forma de governo.
+Para outros, em algumas situações é melhor uma ditadura do que uma democracia. Qual destas
+afirmações é mais parecida com sua forma de pensar? (RU)
+1 ( ) A democracia é sempre melhor que qualquer outra forma de governo
+2 ( ) Em algumas situações é melhor uma ditadura do que uma democracia
+3 ( ) Tanto faz / nenhuma das duas é melhor (espontânea)
+8 ( ) Não sabe (espontânea)
+9 ( ) Não respondeu (espontânea)
+
+
+### Controles
+
+- *Satisfação com a democracia*
+Q21. De uma maneira geral, o(a) sr(a) está muito satisfeito(a), satisfeito(a), pouco satisfeito(a) ou
+nada satisfeito(a) com o funcionamento da democracia no Brasil? (RU)
+1 ( ) Muito satisfeito(a)
+2 ( ) Satisfeito(a)
+3 ( ) Nem satisfeito(a), nem insatisfeito(a) (espontânea)
+4 ( ) Pouco satisfeito(a)
+5 ( ) Nada satisfeito(a)
+8 ( ) Não sabe (espontânea)
+7 ( ) Não respondeu (espontânea)
+
+
+- *Educação*
+
+Devido as diferenças nos sistemas educacionais de cada país, ao invés de utilizar uma variável categórica que diferencie entre faixas de escolaridade (ensino fundamental, médio, superior etc), utilizarei anos completos de escolaridade:
+
+D3. Escolaridade: Até que série o(a) sr(a) estudou e concluiu?
+01( ) Analfabeto/ Nunca frequentou escola
+02( ) Primário incompleto (até 3ª série ou 4º ano do ensino fundamental)
+03( ) Primário completo (4ª.série ou 5º ano do ensino fundamental)
+04( ) Ginásio incompleto (até 7ª série ou 8º ano do ensino fundamental)
+05( ) Ginásio completo (8ª série ou 9º ano do ensino fundamental)
+06( ) Colegial incompleto (até 2ª série do ensino médio)
+07( ) Colegial completo (3ª série do ensino médio)
+08( ) Ensino universitário incompleto ou especialização (técnico após
+ensino médio)
+09( ) Ensino universitário completo
+10( ) Pós-graduação ou mais
+
+- *Sofisticação Política*
+
+Há muitas formas de operacionalizar o conceito de sofisticação política. O ESS tem um conjunto de variáveis agrupadas na categoria "understanding of democracy". Dentro dessa categoria, para o presente trabalho, será utilizada a questão que indaga os entrevistados sobre a importância de eleições livres para a democracia.
+
+P05. De forma geral, você acredita que as eleições no Brasil são confiáveis ou são objeto de fraude?
+(ESTIMULADA E RU)
+1.As eleições são confiáveis
+2.São objetos de fraude
+8.NÃO SABE
+9.NÃO RESPONDEU
+
+
+D3 Escolaridade
+P05 sofisticação política
+NA - 8 e 9
+
+Q21 Satisfação com a democracia
+P08 Adesão democrática
+P25 Internet e redes sociais para informação política
+
+```{r include=FALSE}
+#selecting useful variables
+working_data <- working_data %>% 
+  select(D1A_ID, D2_SEXO, D3_ESCOLA, UF, P5, Q21, P8, P25) %>% 
+  #renaming for more useful names
+  rename(idade = D1A_ID, 
+         sexo = D2_SEXO,
+         escolaridade = D3_ESCOLA,
+         UF = UF,
+         sofisticacao_politica = P5,
+         satisfacao_demo = Q21,
+         adesao_demo = P8,
+         redes_sociais = P25)
+```
+
+```{r include=FALSE}
+#dropping NA values
+unique(working_data2$adesao_demo)
+
+working_data2 <- working_data %>% 
+  filter(adesao_demo != 8,
+         adesao_demo != 9,
+         sofisticacao_politica != 9,
+         satisfacao_demo != 8,
+         satisfacao_demo !=9,
+         redes_sociais != 88,
+         redes_sociais != 99)
+
+summary(working_data2)
+
+head(working_data)
+```
+
+
+```{r echo=FALSE, results="asis"}
+
+stargazer(reg1,
+          omit.stat=c("f"),
+          digits = 2,
+          eader=FALSE, 
+          float=FALSE, 
+          table.placement="!H")
+
+reg1 <- working_data %>% 
+  lm(adesao_demo ~ redes_sociais, data=.)
+```
+
+
+# Estatísticas descritivas
+
+Como as variáveis estão distribuídas?
+
+Que tipo de vars elas são?
+
+
+O que se espera da relação de X e Y no modelo de acordo com as hipóteses, ou seja, que tipo de resultados espero encontrar nos coeficientes?
+
+Qual distribuição forma a relação de X e Y?
+
+
+Que tipo de modelo é o mais adequado?
+
+# Rodando o modelo
+
+Incluir a fórmula do modelo
+
+Rodar o modelo
+
+Interpretar os coeficientes do modelo
+
+Testar heterocedasticidade e multicolineariedade
+
+
+# Testes de robustez
+
