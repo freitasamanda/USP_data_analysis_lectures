@@ -29,6 +29,8 @@ base <-
   base %>% 
   rename(Centro_Oeste = `Centro Oeste`)
 
+head(base)
+
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -150,6 +152,8 @@ Agora adicione as variáveis de dummy de cada uma das regiões em seu modelo de 
 modelo_2_regioes <- 
   base %>% 
   lm(PT_2014 ~ PT_2010 + Norte + Nordeste + Sudeste + Centro_Oeste + Sul, data =.)
+
+
 
 summary(modelo_2_regioes)
 ```

@@ -79,6 +79,7 @@ print(dados)
 dados <- dados %>% rename("estado" = estadp)
 
 ```
+
 ```{r}
 dados <- 
   dados %>% 

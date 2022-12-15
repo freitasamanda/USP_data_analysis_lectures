@@ -140,3 +140,132 @@ melhor, está igual, um pouco pior ou muito pior que nos últimos doze meses?
 7. Não respondeu
 8. Não sabe
 9. MISSING
+
+
+
+CIDADES EM QUE OS ELEITORES EM MÉDIA USAM MAIS INTERNET
+PIB DAS CIDADES + ADESÃO DEMOCRÁTICA
+EDUCAÇÃO DA CIDADE + ADESÃO DEMOCRÁTICA
+SATISFAÇÃO COM A DEMOCRACIA NA CIDADE + ADESÃO DEMOCRÁTICA
+
+
+
+Problema:
+Não tenho variáveis contínuas no banco
+A variável contínua mais acessível é olhar voto
+
+
+
+
+# Introdução
+
+O presente trabalho busca explorar a relação entre o uso de internet e redes sociais e a adesão democrática. 
+
+A literatura diz que, de modo geral, com as redes sociais, o consumo de conteúdo político com desinformação e polarizador, incitando ódio e intolerância, aumentou nos últimos anos (REFs). 
+
+A qualidade da informação com a qual um indivíduo entra em contato em plataformas de rede sociais (principais veículos de acesso à informação na internet) seria duvidosa e hiperpartidária, deslocando e distorcendo compromissos do jornalismo tradicional, como o da imparcialidade e respeito aos valores democráticos (REFS).
+
+Além disso, desde as eleições presidenciais de 2016 nos Estados Unidos, com a vitória de Donald Trump, o escândalo da Cambridge Analytica e envolvimento do Facebook nas eleições, Brexit e a eleição de
+Jair Bolsonaro no Brasil em 2018, a literatura de ciência política tem mostrado a prevalência de conteúdos de extrema-direita, desinformação, discursos de ódio e outros de natureza antidemocrática nas redes sociais mais utilizadas ao redor do mundo (REFS).
+
+Tendo em vista esta breve revisão teórica, é possível estabelecer a hipótese de que indivíduos que usam mais esse tipo de mídia do que a mídia tradicional tenderiam a ter opiniões mais extremistas, e menor comprometimento com os valores tradicionais da democracia. O conceito de adesão democrática, no entanto, possui uma história mais longa do que a existência da internet e das redes sociais, oferecendo explicações diversas para os motivos pelos quais indivíduos aderem aos valores clássicos da democracia, demonstram satisfação com esta forma de regime, ou demonstram-se favoráveis à intervenções militares e regimes autoritários (REFS) 
+
+O DAG busca sistematizar brevemente esta literatura:
+
+INSERIR DAG AQUI
+
+Primeiramente, temos a relação entre sofisticação política e adesão democrática, isto é, indivíduos com maior conhecimento sobre o funcionamento do sistema político, e do próprio conceito de democracia em si, tenderiam a ter maior adesão democrática (REFS). 
+
+Sofisticação política é, por sua vez, afetada pelo interesse em política e a educação do indivíduo: indivíduos mais interessados em participar politicamente e informar-se sobre política, assim como indivíduos com maior escolaridade, tenderiam a ter maior adesão democrática.
+
+Temos em seguida variáveis relacionadas à satisfação. Satisfação do indivíduo com a situação econômica de seu país está relacionada a uma maior satisfação com a democracia, o que por sua vez impacta na adesão democrática, isto é, indivíduos mais satisfeitos com o desempenho do regime democrático tendem a ser mais favoráveis a este (REFS). 
+
+Por fim, temos duas variáveis sociodemográficas que impactam mais de uma variável do modelo. Indivíduos com maior renda tendem a ter mais acesso a aparelhos eletrônicos e a melhor sinal de internet, afetando nossa variável independente. Além disso, uma maior renda impacta a satisfação que um indivíduo demonstra com a situação econômica de seu país. Por fim, temos educação, que afeta a renda, o uso de internet, devido ao maior letramento digital dos indivíduos e proficiência para utilizar plataformas digitais, assim como impacta interesse em política.
+
+Tendo em vista o DAG apresentado, podemos concluir que o efeito total do uso de internet na variável Adesão Democrática, passa pelas variáveis 
+
+# OPERACIONALIZAÇÃO DAS VARIÁVEIS
+
+# Estatísticas descritivas
+
+Como as variáveis estão distribuídas?
+
+Que tipo de vars elas são?
+
+O que se espera da relação de X e Y no modelo de acordo com as hipóteses, ou seja, que tipo de resultados espero encontrar nos coeficientes?
+
+Qual distribuição forma a relação de X e Y?
+
+Que tipo de modelo é o mais adequado?
+
+
+## Fórmula do modelo
+
+adesao democrática = beta0 + beta1 uso da internet + beta2satisfacao_demo + beta3 educacao + beta4sofisticaçao
+
+
+
+
+# ibge
+
+```{r eval=FALSE, include=FALSE}
+IBGE <- read_excel("IBGE_PIBs/PIB dos Municípios - base de dados 2010-2019.xls")
+
+head(IBGE)
+
+
+colnames(IBGE)
+#Produto Interno Bruto, \na preços correntes\n(R$ 1.000)
+#Nome da Grande Região
+#Nome do Município
+
+IBGE <- IBGE %>% 
+  select(`Produto Interno Bruto, 
+a preços correntes
+(R$ 1.000)`, `Nome da Grande Região`, `Nome do Município`, `Sigla da Unidade da Federação`, `Nome da Unidade da Federação`)
+
+dim(IBGE)
+
+```
+
+# tse
+```{r eval=FALSE, include=FALSE}
+eleicao <- read.csv("ELEICAO_TSE/votacao_candidato.csv", sep = ";",
+                     fileEncoding = "windows-1252")
+
+head(eleicao)
+
+eleicao2 <- eleicao %>% 
+  filter(ds_cargo == "Presidente") %>% 
+  filter(nm_candidato == "")
+
+head(eleicao2)
+unique(eleicao2$nm_candidato)
+
+
+
+
+```
+
+
+# ELEIÇÕES
+
+```{r}
+
+eleicao_brasil <- read.csv("ELEICAO_TSE/votacao_candidato_munzona_2018/votacao_candidato_munzona_2018_BRASIL.csv", fileEncoding = "windows-1252")
+
+df2 <-df %>% filter(DS_CARGO=="Presidente", NR_TURNO==2)
+
+df3<-df2 %>% group_by(SG_UF, CD_MUNICIPIO, NM_MUNICIPIO, NR_PARTIDO) %>% summarise(votos=sum(QT_VOTOS_NOMINAIS)) %>% pivot_wider(names_from = NR_PARTIDO, values_from = votos)
+
+write.csv(df3, file="df3.csv", fileEncoding = "windows-1252", row.names = FALSE)
+```
+
+
+
+
+
+
+
+
+

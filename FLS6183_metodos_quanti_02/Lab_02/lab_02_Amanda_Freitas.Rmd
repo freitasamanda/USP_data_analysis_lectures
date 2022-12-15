@@ -24,6 +24,7 @@ tidy(modelo01)
 
 summary(modelo01)
 ```
+
 ```{r, results='asis'}
 modelo01 %>% 
    stargazer(type="html")
