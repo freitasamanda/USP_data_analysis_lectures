@@ -1,0 +1,142 @@
+---
+title: "codigos_uteis"
+author: "Amanda Freitas"
+date: '2022-12-13'
+output: html_document
+---
+
+RELAÇÃO ENTRE DUAS VARIAVEIS GRAFICO
+```{r}
+dados %>% 
+  ggplot() +
+  geom_point(aes(
+    x = renda, y = funcionarios_porcentagem
+  )) +
+  ggtitle("Relação entre % de funcionários públicos e renda do estado") +
+  xlab("renda per capita do município") +
+  ylab("porcentagem de funcionários públicos")
+```
+
+REGRESSAO
+
+```{r}
+regressao <- 
+  dados %>% 
+  lm(funcionarios ~ renda, dados=.) 
+
+summary(regressao) 
+```
+
+```{r}
+residuos <- regressao$residuals
+residuos
+```
+
+```{r}
+#find sse - Sum of Squares Error (SSE)
+sse <- sum((fitted(regressao) - dados$funcionarios_porcentagem)^2)
+sse
+
+#find ssr Sum of Squares Regression (SSR)
+ssr <- sum((fitted(regressao) - mean(dados$funcionarios_porcentagem))^2)
+ssr
+
+#find sst Sum of Squares Total (SST)
+sst <- ssr + sse
+sst
+
+#We can verify that SST = SSR + SSE:
+ssr + sse == sst
+```
+
+Outra forma de fazer confidence interval é com o comando confint:
+
+```{r}
+confint(modelo01)
+confint(modelo02)
+confint(modelo03)
+```
+
+Os valores dos dois coeficientes não estão contidos nos intervalos de confiança, portanto podemos afirmar com 95% de certeza que os coeficientes de X1 no modelo sem variáveis de controle e no modelo com duas variáveis de controle são diferentes.
+
+
+```{r include=FALSE}
+residuos_modelo_01 <- modelo01$residuals
+residuos_modelo_02 <- modelo02$residuals
+residuos_modelo_03 <- modelo03$residuals
+residuos_modelo_04 <- modelo04$residuals
+residuos_modelo_05 <- modelo05$residuals
+```
+
+Com essa informação, podemos contruir um gráfico para analisar nossos resíduos em comparação aos valores previstos pelo modelo usando o ggplot.
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+preditos_modelo_01 <- predict(modelo01)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+residuos_fitted_modelo01 <- 
+  cbind(residuos_modelo_01, preditos_modelo_01) %>%
+  as.data.frame()
+
+residuos_fitted_modelo_01_residuos <- 
+  as.data.frame(residuos_modelo_01)
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE}
+ggplot(residuos_fitted_modelo01, aes(x = preditos_modelo_01, y = residuos_modelo_01)) +
+  geom_point() + 
+  stat_smooth(method='lm')
+```
+
+Construa um gráfico de dispersão que relacione a variável explicativa com os resíduos. O que é possível notar neste gráfico a respeito da relação entre ambas as variáveis?
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+#Também podemos tirar um gráfico de dispersão entre resíduos e os valores previstos pelo modelo apenas com a função plot(). (Considere apenas o gráfico Residuals vs Fitted)
+plot(modelo_06)
+```
+
+```{r}
+residuos_modelo_15 <- modelo_15$residuals
+
+preditos_modelo_15 <- predict(modelo_15)
+
+fitted_modelo_15 <- 
+  cbind(dados_03$y2, preditos_modelo_15) %>%
+  as.data.frame()
+
+ggplot(fitted_modelo_15, aes(x = V1, y = preditos_modelo_15)) +
+  geom_point() + 
+  stat_smooth(method='lm')
+```
+
+
+
+
+A média dos resíduos é 0, porém nesse gráfico à medida que a variável aumenta, a dispersão em torno da média 0 cresce cada vez mais.  Isso significa que a variância dos resíduos é uma função da variável c1, e isso viola uma das hipóteses do modelo de regressão e também dará problemas. Quando o gráfico forma um círculo significa que não há associação.
+
+Para verificar a matriz de correlação entre as variáveis de uma tabela, usamos:
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+corrplot(cor(dados), 
+         method = "number")
+```
+
+```{r}
+bptest(reg)
+
+ols_vif_tol(reg2)
+```
+
+## Heterocedasticidade
+Uma hipótese do modelo é a de que a variância é constante. O valor médio da estimativa da variância NÃO DEPENDE DE X. Testa se o resíduo é explicado por alguma das variáveis,o que é o mesmo que fazer uma regressão dos resíduos e das variáveis, esperamos que seja um modelo ruim.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+bptest(modelo_06)
+```
+Ho - a variância constante = homocedasticidade, isso quer dizer que esse modelo não é homocedástico. 
+
+É possível corrigir o problema usando os erros-padrão ajustados. 
+- Pegar vars que causam heterocedasiticdade "descontando" uma variância para remover essa heterocedasticidade.
+- Só rodar modelo com erros padrão robustos se detectar a heterocedasticidade. 
+
