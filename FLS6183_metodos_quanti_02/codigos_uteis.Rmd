@@ -140,3 +140,7 @@ Ho - a variância constante = homocedasticidade, isso quer dizer que esse modelo
 - Pegar vars que causam heterocedasiticdade "descontando" uma variância para remover essa heterocedasticidade.
 - Só rodar modelo com erros padrão robustos se detectar a heterocedasticidade. 
 
+
+
+# REGRESSÃO LOGIT CÓDIGOS E PASSO A PASSO
+

@@ -15,30 +15,32 @@ knitr::opts_chunk$set(message=FALSE, warning = FALSE, paged.print=TRUE)
 #install.packages("tidylog")
 #install.packages("broom")
 #install.packages("stargazer")
-library(tidyverse)
-library(tidylog)
-library(broom)
-library(stargazer)
+#install.packages("rgl")
+#install.packages("car")
+#install.packages("reshape2")
+#install.packages("jtools")
+#install.packages("lmtest")
+#install.packages("caret")
+#install.packages("pROC")
+#install.packages("ROCR")
+#install.packages("nnet")
 ```
 
 ```{r include=FALSE}
-
-pacotes <- c("rgl","car", "tidyverse",
-             "reshape2","jtools","lmtest","caret","pROC","ROCR","nnet")
-
-if(sum(as.numeric(!pacotes %in% installed.packages())) != 0){
-  instalador <- pacotes[!pacotes %in% installed.packages()]
-  
-  for(i in 1:length(instalador)) {
-    install.packages(instalador, dependencies = T)
-    break()}
-  sapply(pacotes, require, character = T) 
-} else {
-  sapply(pacotes, require, character = T) 
-}
-
-
+library(tidylog)
+library(broom)
+library(stargazer)
+library(rgl)
+library(car)
+library(reshape2)
+library(jtools)
+library(lmtest)
+library(pROC)
+library(ROCR)
+library(nnet)
+library(tidyverse)
 ```
+
 
 Sabemos pelo modelo de regressão logística que a sua função é expressa por:
 
@@ -88,9 +90,9 @@ modelo_01 <-
 
 ```
 
-```{r echo=FALSE}
+```{r include=FALSE}
 #visualizando os resultados
-summ(modelo_01, 
+summary(modelo_01, 
      confint = T, 
      digits = 3,
      ci.width = .95) 
@@ -100,7 +102,8 @@ summ(modelo_01,
 stargazer(modelo_01,
           confint = T,
           header = F,
-          digits = 3)
+          digits = 3,
+          type = "html")
 ```
 
 Como encontrar, a partir deste resultado, a probabilidade p?
@@ -135,11 +138,14 @@ Em outras palavras, o intercepto do modelo sem variável explicativa é o logari
 *As chances de sucesso são definidas como a razão da probabilidade de sucesso pela probabilidade de fracasso, se sucesso é hon = 1 e fracasso é hon = 0, então temos que*
 
 prob sucesso / prob de fracasso =
-75.5% / 24.5% = 3
-ln(3)=1.099
 
-```{r}
+`r 0.755 / 0.245`
+`r log(3)`
+
+```{r eval=FALSE, include=FALSE}
 0.755 / 0.245
+
+log(3)
 ```
 2)	O que este resultado significa?
 
@@ -159,8 +165,8 @@ modelo_02 <-
       family = "binomial")
 ```
 
-```{r echo=FALSE}
-summ(modelo_02, 
+```{r include=FALSE}
+summary(modelo_02, 
      confint = T, 
      digits = 3, 
      ci.width = .95)
@@ -170,12 +176,13 @@ summ(modelo_02,
 stargazer(modelo_02,
           confint = T,
           header = F,
-          digits = 3)
+          digits = 3,
+          type = "html")
 ```
 
 Antes de interpretarmos os resultados, vamos considerar a frequência conjunta das duas variáveis:
 
-```{r echo=FALSE}
+```{r echo=FALSE, paged.print=TRUE}
 xtabs(~hon + female, data = ucla)
 ```
 3)	Encontre a probabilidade de um homem estar na “honor class”, a probabilidade de uma mulher estar na “honor class” e qual é a razão de chance para as mulheres em relação aos homens.
@@ -204,18 +211,20 @@ modelo_03 <-
 
 ```
 
-```{r echo=FALSE}
+```{r include=FALSE}
 #visualizando os resultados
-summ(modelo_03, 
+summary(modelo_03, 
      confint = T, 
      digits = 3,
      ci.width = .95) 
 ```
+
 ```{r echo=FALSE, results='asis'}
 stargazer(modelo_03,
           confint = T,
           header = F,
-          digits = 3)
+          digits = 3,
+          type = "html")
 ```
 
 
@@ -238,13 +247,22 @@ modelo_04 <-
       family = "binomial")
 ```
 
-```{r echo=FALSE}
+```{r include=FALSE}
 #visualizando os resultados
-summ(modelo_04, 
+summary(modelo_04, 
      confint = T, 
      digits = 3,
      ci.width = .95)
 ```
+
+```{r echo=FALSE, results='asis'}
+stargazer(modelo_04,
+          confint = T,
+          header = F,
+          digits = 3,
+          type = "html")
+```
+
 8)	O que aconteceria se ao invés de rodarmos um modelo não linear, utilizássemos um comando de regressão de OLS convencional? 
 a.	Estime os parâmetros via OLS e interprete os resultados
 b.	Compare com os resultados obtidos no item 7 acima.
@@ -257,9 +275,9 @@ modelo_05 <-
       data = ucla)
 ```
 
-```{r echo=FALSE}
+```{r include=FALSE}
 #visualizando os resultados
-summ(modelo_05, 
+summary(modelo_05, 
      confint = T, 
      digits = 3,
      ci.width = .95)
@@ -269,7 +287,29 @@ summ(modelo_05,
 stargazer(modelo_05,
           confint = T,
           header = F,
-          digits = 3)
+          digits = 3,
+          type = "html")
+```
+
+
+# CÓDIGOS DO RPUBS
+https://rpubs.com/StevenDuttRoss/razao_de_chances
+
+```{r echo=TRUE}
+#Antes de tentar interpretar os dois parâmetros estimados acima, vamos dar uma olhada na tabela cruzada da variável especial com female.
+
+tabela<-table(ucla$female, ucla$hon)
+colnames(tabela)<-c("Não","Sim")
+rownames(tabela)<-c("Masculino","Feminino")
+tabela
+
+```
+```{r echo=TRUE}
+table(ucla$hon)
+```
+
+```{r echo=TRUE}
+prop.table(table(ucla$hon))*100
 ```
 
 
