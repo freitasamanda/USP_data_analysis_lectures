@@ -1,6 +1,5 @@
 ---
-title: 'Internet e adesão democrática: análise de regressão com base nos dados do
-  European Social Survey - onda 11 - 2020'
+title: 'Limpeza do ESEB para trabalho final'
 author: "Amanda Freitas"
 date: '2022-11-29'
 output:
@@ -31,34 +30,29 @@ library(labelled)
 # ESEB-2018 ESTUDO ELEITORAL BRASILEIRO - Análise inicial dos dados
 https://www.cesop.unicamp.br/por/banco_de_dados/v/4538
 
-```{r include=FALSE}
+```{r Reading data, include=FALSE}
 #Reading ESEB 2018 data from SPSS format
 data <- haven::read_sav("ESEB/04622.sav", user_na = FALSE)
+
+head(data)
 
 #Reading excel file provided by ESEB with information on variables
 information_variables <- read_excel("ESEB/info_vars.xlsx")
 
+head(information_variables)
+
 ```
 
-```{r include=FALSE}
-#Removing columns that won't be used
+```{r Removing useless columns, include=FALSE}
+#Removing columns that won't be needed
 working_data <- data %>% 
   select(-entrevistador, - A1_Nquest, - peso, -tempo_entrevista, -DIAENTR, -MESENTR, -ANOENTR)
 ```
 
-D09 Renda
-D3 Escolaridade
-P05 sofisticação política
-Q21 Satisfação com a democracia
-P08 Adesão democrática
-P25 Internet e redes sociais para informação política
 
-## Operacionalização das variáveis com os dados do ESEB
+# Operacionalização das variáveis
 
-
-### Variáveis de interesse
-
-- *Uso de internet para informação política*
+- *Uso de redes sociais para informação política*
 P25. Qual destes meios o(a) sr(a) mais utiliza para se informar sobre política? (RU)
 1-Jornais e Revistas
 2-Noticiário da TV
@@ -85,9 +79,6 @@ afirmações é mais parecida com sua forma de pensar? (RU)
 8 ( ) Não sabe (espontânea)
 9 ( ) Não respondeu (espontânea)
 
-
-### Controles
-
 - *Satisfação com a democracia*
 Q21. De uma maneira geral, o(a) sr(a) está muito satisfeito(a), satisfeito(a), pouco satisfeito(a) ou
 nada satisfeito(a) com o funcionamento da democracia no Brasil? (RU)
@@ -96,6 +87,8 @@ nada satisfeito(a) com o funcionamento da democracia no Brasil? (RU)
 3 ( ) Nem satisfeito(a), nem insatisfeito(a) (espontânea)
 4 ( ) Pouco satisfeito(a)
 5 ( ) Nada satisfeito(a)
+
+NAs
 8 ( ) Não sabe (espontânea)
 7 ( ) Não respondeu (espontânea)
 
@@ -117,42 +110,39 @@ ensino médio)
 09( ) Ensino universitário completo
 10( ) Pós-graduação ou mais
 
-- *Sofisticação Política*
-
-Há muitas formas de operacionalizar o conceito de sofisticação política. O ESS tem um conjunto de variáveis agrupadas na categoria "understanding of democracy". Dentro dessa categoria, para o presente trabalho, será utilizada a questão que indaga os entrevistados sobre a importância de eleições livres para a democracia.
+- *Acreditar em Fraude Eleitoral*
 
 P05. De forma geral, você acredita que as eleições no Brasil são confiáveis ou são objeto de fraude?
 (ESTIMULADA E RU)
 1.As eleições são confiáveis
 2.São objetos de fraude
+
+NAs
 8.NÃO SABE
 9.NÃO RESPONDEU
 
-
-D3 Escolaridade
-P05 sofisticação política
-NA - 8 e 9
 
 Q21 Satisfação com a democracia
 P08 Adesão democrática
 P25 Internet e redes sociais para informação política
 
 
-- *Q12P2_B - Em quem votou no segundo turno*
-
-
+- *Voto em Bolsonaro*
 Q12P2-b. Em quem O(A) SR(A) votou para presidente no SEGUNDO turno 
 
 01 Fernando Haddad (PT)
 02 Jair Bolsonaro (PSL)
 
+NAs
 50 - Anulou o voto (NÃO LER)
 60 - Votou em branco (NÃO LER)
 98 - Não sabe /Não lembra (NÃO LER)
 97 - Não Respondeu (NÃO LER)
 99 - missing
 
-```{r include=FALSE}
+# Selecting variables
+
+```{r Selecting and renaming useful variables, include=FALSE}
 #selecting useful variables
 working_data <- working_data %>% 
   select(D1A_ID, D2_SEXO, D3_ESCOLA, UF, CID, P5, Q21, P8, P25, Q12P2_B) %>%
@@ -169,125 +159,76 @@ working_data <- working_data %>%
          voto_segundo_turno_2018 = Q12P2_B)
 ```
 
-```{r include=FALSE}
+# Creating dummies
+
+```{r Dropping NA Values, include=FALSE}
 #dropping NA values
 working_data <- working_data %>% 
   filter(adesao_demo != 8 & adesao_demo != 9) %>% 
   filter(fraude_eleicoes != 9 & fraude_eleicoes != 8) %>% 
-  filter(satisfacao_demo != 8 & satisfacao_demo !=9) %>% 
+  filter(satisfacao_demo != 8 & satisfacao_demo != 9) %>% 
   filter(redes_sociais != 88 & redes_sociais != 99) %>% 
   filter(voto_segundo_turno_2018 != 50 & voto_segundo_turno_2018 != 60 & voto_segundo_turno_2018 != 97 & voto_segundo_turno_2018 != 98 & voto_segundo_turno_2018 != 99)
 ```
 
-```{r include=FALSE}
+```{r Dummy redes sociais principal meio, include=FALSE}
 #criando a dummy de redes sociais
 #respondeu que o meio que mais utiliza é redes sociais - 5 = 1
 #demais respostar = 0
 working_data <- working_data %>% 
   mutate(dummy_redes = case_when(redes_sociais == 5 ~ 1,
-                                      redes_sociais != 5 ~ 0)) %>% 
-  mutate(nao_dummy_redes = case_when(dummy_redes == 0 ~ 1,
-                                     dummy_redes == 1 ~ 0))
+                                      redes_sociais != 5 ~ 0))
 ```
 
-```{r}
+```{r Dummy crença em fraude eleitoral, include=FALSE}
 #criando a dummy de fraude eleicoes
 #1.As eleições são confiáveis - fraude_eleicoes
 # 2 - eleições são objeto de fraude - nao_fraude_eleicoes
 working_data <- working_data %>% 
   mutate(dummy_fraude = case_when(fraude_eleicoes == 1 ~ 1,
-                                 fraude_eleicoes == 2 ~ 0)) %>% 
-  mutate(nao_dummy_fraude = case_when(fraude_eleicoes == 1 ~ 0,
-                                     fraude_eleicoes == 2 ~ 1))
-
+                                 fraude_eleicoes == 2 ~ 0))
 ```
 
-```{r include=FALSE}
-# criando a dummy de Satisfação com a democracia
+```{r Dummy satisfação com a democracia, include=FALSE}
 #1 e 2 - muito satisfeito e satisfeito vai virar satisfeito
-#4 e 5 pouco satisfeito e nada satisfeito vai virar insatisfeito
+#3 e 4 e 5 nem satisfeito pouco satisfeito e nada satisfeito vai virar insatisfeito
 #3, 7 e 8 saem
 working_data <- working_data %>% 
-  filter(satisfacao_demo != 3) %>% 
   filter(satisfacao_demo != 7) %>% 
   mutate(dummy_satisfeito = case_when(satisfacao_demo == 1 ~ 1,
                                      satisfacao_demo == 2 ~ 1,
+                                     satisfacao_demo == 3 ~ 0,
                                      satisfacao_demo == 4 ~ 0,
-                                     satisfacao_demo == 5 ~ 0)) %>% 
-  mutate(nao_dummy_satisfeito = case_when(dummy_satisfeito == 1 ~ 0,
-                                       dummy_satisfeito == 0 ~ 1))
+                                     satisfacao_demo == 5 ~ 0))
 
 ```
 
-```{r include=FALSE}
-# criando a dummy de Adesão democrática
+```{r Dummy adesão democrática, include=FALSE}
 #a democracia é sempre melhor que qualquer forma de gov 1 = adepto
-#Em algumas situações é melhor uma ditadura do que uma dem 2 = nao_adepto
-#3, 8 e 9 saem
-
+#Em algumas situações é melhor uma ditadura do que uma dem 2 e tanto faz = nao_adepto
 working_data <- working_data %>% 
-  filter(adesao_demo != 3) %>% 
   mutate(dummy_adepto_demo = case_when(adesao_demo == 1 ~ 1,
-                                 adesao_demo == 2 ~ 0)) %>% 
-  mutate(nao_dummy_adepto_demo = case_when(adesao_demo == 2 ~ 1,
-                                     adesao_demo == 1 ~ 0))
-
+                                 adesao_demo == 2 ~ 0))
 ```
 
-```{r include=FALSE}
-#criando dummy de voto em Bolsonaro no segundo turno de 2018
+```{r Dummy voto em Bolsonaro no 2o turno de 2018, include=FALSE}
 #1 - voto em hadadd na dummy vira 0
 # 2 voto em Bolsonaro - na dummy vira 1
-
 working_data <- working_data %>% 
   mutate(dummy_bolsonaro = case_when(voto_segundo_turno_2018 == 2 ~ 1,
-                                   voto_segundo_turno_2018 == 1 ~ 0)) %>% mutate(nao_dummy_bolsonar = case_when(voto_segundo_turno_2018 == 1 ~ 1,
-                                                                                                           voto_segundo_turno_2018 == 2 ~ 0))
+                                   voto_segundo_turno_2018 == 1 ~ 0))
 ```
 
-
-# ESTATS DESCRITIVAS
-regressoes
-
-```{r include=FALSE}
-reg1_redes <- working_data %>% 
-  lm(dummy_bolsonaro ~ dummy_redes, data=.)
-
-reg2_redes_adepto <- working_data %>% 
-  lm(dummy_bolsonaro ~ dummy_redes + dummy_adepto_demo, data=.)
-
-reg3_redes_adepto_fraude <- working_data %>% 
-  lm(dummy_bolsonaro ~ dummy_redes + dummy_adepto_demo + dummy_fraude, data=.)
-
-reg4_redes_adepto_fraude_satisfeito <- working_data %>% 
-  lm(dummy_bolsonaro ~ dummy_redes + dummy_adepto_demo + dummy_fraude + dummy_satisfeito, data=.)
-
-```
-
-```{r echo=FALSE, results="asis"}
-stargazer(reg2_redes_adepto,
-          reg3_redes_adepto_fraude,
-          reg4_redes_adepto_fraude_satisfeito,
-          omit.stat=c("f"),
-          digits = 2,
-          float=FALSE, 
-          table.placement="!H",
-          type = "html")
-```
-
-
-# MODELOS COM VARS DIFERENTES
-
-```{r include=FALSE}
-#criando dummy ser mulher = 1 ser homem = 0
+```{r Dummy mulher, include=FALSE}
+#1 = mulher
+#2 = homem
 working_data <- working_data %>% 
-  mutate(dummy_mulher = case_when(sexo == 1 ~ 0,
-                                  sexo == 2 ~ 1))
-
+  mutate(dummy_mulher = case_when(sexo == 2 ~ 1,
+                                  sexo == 1 ~ 0))
 ```
 
-```{r include=FALSE}
-#criando dummy escolaridade
+
+```{r dummy ensino superior completo, include=FALSE}
 #ensino superior e pós (8 e 9) = 1
 #demais = 0 (0, 1, 2, 3,4 5, 6, 7)
 working_data <- working_data %>% 
@@ -304,129 +245,50 @@ working_data <- working_data %>%
 
 ```
 
-```{r include=FALSE}
-reg5_escolaridade_sexo <- working_data %>% 
-  lm(dummy_bolsonaro ~ dummy_mulher + dummy_superior, data=.)
 
-reg6_tudo <- working_data %>% 
-  lm(dummy_bolsonaro ~ dummy_mulher + dummy_superior + dummy_redes + dummy_adepto_demo + dummy_fraude + dummy_satisfeito, data=.)
+```{r Interação: ser homem E acreditar em fraude eleitoral, include=FALSE}
+#dummy mulher = 0 E dummy fraude = 1 vira 1 (homem acredita em fraude)
+#dummy mulher = 0 E dummy fraude = 0 vira 0 (homem não acredita em fraude)
+# dummy mulher = 1 E dummy fraude = 1 vira 0 (mulher acredita em fraude)
+# dummy mulher = 1 E dummy fraude = 0 vira 0 (mulher não acredita em fraude)
+
+working_data <- working_data %>% 
+  mutate(dummy_interacao_homem_fraude = case_when(
+    dummy_mulher == 0 & dummy_fraude == 1 ~ 1,
+    dummy_mulher == 0 & dummy_fraude == 0 ~ 0,
+    dummy_mulher == 1 & dummy_fraude == 1 ~ 0,
+    dummy_mulher == 1 & dummy_fraude == 0 ~ 0,))
 
 ```
 
-```{r echo=FALSE, results="asis"}
-stargazer(reg5_escolaridade_sexo,
-          reg6_tudo,
-          omit.stat=c("f"),
-          digits = 2,
-          float=FALSE, 
-          table.placement="!H",
-          type = "html")
+```{r Interação: não ter superior completo E acreditar em fraude, include=FALSE} 
+#dummy_superior == 0 & dummy_fraude == 1 vira 1 (Não tem superior e acredita em fraude)
+#dummy_superior == 0 & dummy_fraude == 0 vira 0 (não tem superior e não acredita em fraude)
+#dummy_superior == 1 & dummy_fraude == 1 vira 0 (tem superior e acredita em fraude)
+#dummy_superior == 1 & dummy_fraude == 0 (tem superior e não acredita em fraude)
+working_data <- working_data %>% 
+  mutate(dummy_interacao_superior_fraude = case_when(
+    dummy_superior == 0 & dummy_fraude == 1 ~ 1,
+    dummy_superior == 0 & dummy_fraude == 0 ~ 0,
+    dummy_superior == 1 & dummy_fraude == 1 ~ 0,
+    dummy_superior == 1 & dummy_fraude == 0 ~ 0))
 ```
 
+# Exporting clean database
+ 
+```{r Salvando a base limpa, include=FALSE}
+base_limpa <- working_data %>% 
+  select(dummy_bolsonaro, dummy_fraude, dummy_redes, dummy_satisfeito, dummy_adepto_demo, dummy_mulher, dummy_superior, dummy_interacao_homem_fraude, dummy_interacao_superior_fraude) %>% 
+  rename(bolsonaro = dummy_bolsonaro,
+         fraude_eleitoral = dummy_fraude, 
+         redes_sociais = dummy_redes, 
+         satisfeito_demo = dummy_satisfeito, 
+         adepto_demo = dummy_adepto_demo, 
+         mulher = dummy_mulher, 
+         superior_pos = dummy_superior, 
+        interacao_homem_fraude = dummy_interacao_homem_fraude, 
+        interacao_superior_fraude = dummy_interacao_superior_fraude)
 
-# MODELO LOGIT
-https://rpubs.com/StevenDuttRoss/razao_de_chances
-
-
-Probabilidade de votar no Bolsonaro
-```{r}
-reg_bolsonaro <- working_data %>% 
-  glm(dummy_bolsonaro ~ 1, family =binomial(link = "logit"), data=.)
-
-summary(reg_bolsonaro)
+write.csv(base_limpa, "base_limpa_trab.csv")
 ```
-
-log(p/(1−p))= 0.36418
-
-Frequência
-```{r}
-table(working_data$dummy_bolsonaro)
-```
-
-```{r}
-prop.table(table(working_data$dummy_bolsonaro))*100
-```
-
-A probabilidade de ter votado em Bolsonaro é 59%.
-
-```{r}
-table(working_data$dummy_redes)
-```
-
-```{r}
-prop.table(table(working_data$dummy_redes))*100
-```
-
-A probabilidade de usar rededs sociais como principal meio de informação sobre política é 21%. Apenas 283 respondentes disseram que o fazem, do total de 1327.
-
-```{r}
-table(working_data$dummy_fraude)
-```
-
-```{r}
-prop.table(table(working_data$dummy_fraude))*100
-```
-
-625 respondentes afirmaram que as eleições são objeto de fraude. A probabilidade de um respondente afirmar que as eleições são objeto de fraude é de 47%.
-
-```{r}
-table(working_data$dummy_satisfeito)
-```
-
-```{r}
-prop.table(table(working_data$dummy_satisfeito))*100
-```
-
-A probabilidade de um respondente dizer que está insatisfeito com a democracia é de 84%. 1126 respondentes o disseram.
-
-```{r}
-table(working_data$dummy_adepto_demo)
-```
-
-```{r}
-prop.table(table(working_data$dummy_adepto_demo))*100
-```
-
-82% dos responmdentes disseram que a democracia é a melhor forma de governo. Apenas 233 respondentes disseram que uma ditadura as vezes seria preferível.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Estatísticas descritivas
-
-Como as variáveis estão distribuídas?
-
-Que tipo de vars elas são?
-
-
-O que se espera da relação de X e Y no modelo de acordo com as hipóteses, ou seja, que tipo de resultados espero encontrar nos coeficientes?
-
-Qual distribuição forma a relação de X e Y?
-
-
-Que tipo de modelo é o mais adequado?
-
-# Rodando o modelo
-
-Incluir a fórmula do modelo
-
-Rodar o modelo
-
-Interpretar os coeficientes do modelo
-
-Testar heterocedasticidade e multicolineariedade
-
-
-# Testes de robustez
 

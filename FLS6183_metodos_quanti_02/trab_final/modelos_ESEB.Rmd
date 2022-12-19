@@ -1,0 +1,113 @@
+---
+title: "Modelos Regressão Logit ESEB"
+author: "Amanda Freitas"
+date: '2022-11-29'
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = F, warning = F, paged.print = T)
+```
+
+```{r include=FALSE}
+library(tidyverse)
+library(tidylog)
+library(tidyr)
+library(data.table)
+library(readr)
+library(ggplot2)
+library(foreign)
+library(readxl)
+library(stargazer)
+library(haven)
+#install.packages("labelled")
+library(labelled)
+library(knitr)
+```
+
+
+# Lendo base e variáveis
+
+```{r Importando base limpa, include=FALSE}
+dados <- read.csv("base_limpa_trab.csv") %>% 
+  select(-X)
+
+head(dados)
+colnames(dados)
+```
+
+*bolsonaro -> 1 é votar nele no 2o turno e 0 é não votar
+
+*fraude_eleitoral -> 1 é acreditar em fraude eleitoral e 0 é não acreditar
+
+*redes_sociais -> 1 é usar as redes sociais como principal fonte de informação política e 0 é usar outros meios como principal fonte de informação política
+
+*satisfeito_demo -> 1 é estar muito satisfeito ou satisfeito com a democracia e 0 é estar insatisfeito, dizer que tanto faz
+
+*adepto_demo -> 1 é acreditar que a democracia é a melhor forma de governo e 0 é acreditar que as vezes uma ditadura é melhor
+
+*mulher -> 1 é ser mulher e 0 é ser homem
+
+*superior_pos -> 1 é ter ensino superior completo pra cima e 0 é ter só até o ensino médio completo
+
+
+bolsonaro
+fraude_eleitoral
+redes_sociais
+satisfeito_demo
+adepto_demo
+mulher
+superior_pos
+
+
+------------------
+
+# Frequencias vars sozinhas
+
+## bolsonaro
+
+$$p = prob(bolsonaro = 1)$$
+
+Frequência absoluta:
+```{r echo=FALSE}
+table(dados$bolsonaro)
+```
+
+Frequência relativa:
+```{r echo=FALSE}
+table(dados$bolsonaro)/nrow(dados)*100
+```
+
+```{r include=FALSE}
+log_bolsonaro <- dados %>% 
+  glm(bolsonaro ~ 1, family = "binomial", data = .)
+```
+
+```{r echo=FALSE, results='asis'}
+stargazer(log_bolsonaro,
+          confint = T,
+          digits = 3,
+          type = "html")
+```
+
+
+
+## fraude_eleitoral
+## redes_sociais
+## satisfeito_demo
+## adepto_demo
+## mulher
+## superior_pos
+
+----------
+
+# Frequências com Bolsonaro
+
+## bolsonaro e fraude_eleitoral
+## bolsonaro e redes_sociais
+## bolsonaro e satisfeito_demo
+## bolsonaro e adepto_demo
+## bolsonaro e mulher
+## bolsonaro e superior_pos

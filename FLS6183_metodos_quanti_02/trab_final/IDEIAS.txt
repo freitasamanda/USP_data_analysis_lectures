@@ -263,6 +263,26 @@ write.csv(df3, file="df3.csv", fileEncoding = "windows-1252", row.names = FALSE)
 
 
 
+A base limpa contém 7 variáveis dummies que serão usadas para testar a relação entre o uso de redes sociais como principal forma de consumo de conteúdo político (VI) e a crença em frauda eleitoral (VI) e o voto em Bolsonaro (VD). Temos também variáveis de controle: satisfação com a democracia, adesão democrática, ser mulher, ter pelo menos o ensino superior completo.
+
+Estabelece-se as seguintes hipóteses:
+
+H1 - eleitores que usam as redes sociais como principal forma de consumo de informação política têm maior chance de votar em Bolsonaro.
+
+Ou seja, esperamos que o coeficiente $/beta$ da variável dummy para redes sociais seja positivo quando redes = 1 e estatisticamente significante.
+
+H2 - eleitores que creem em fraude eleitoral têm maior chance de votar em Bolsonaro
+
+Ou seja, esperamos que o coeficiente $/beta$ da variável dummy para fraude eleitoral seja positivo quando fraude = 1 e estatisticamente significante.
+
+Temos, ainda, duas hipóteses sobre a interação entre as variáveis gênero e escolaridade com a crença em fraude eleitoral, estabelecendo as seguintes hipóteses condicionais:
+
+H3 - As chances de eleitores que acreditam em fraude eleitoral votarem em Bolsonaro são maiores quando são homens.
+
+Ou seja, esperamos que a dummy mulher tenha coeficiente $/beta$ negativo, 
+
+H4 - As chances de eleitores que acreditam em fraude eleitoral votarem em Bolsonaro são maiores quando não tem ensino superior completo.
+
 
 
 
